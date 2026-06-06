@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>muvaz — all pages</title>
+  <meta name="viewport" content="width=375,initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: #f0f0f0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #ffffff; max-width: 375px; margin: 0 auto; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 4px 24px rgba(0,0,0,0.08); }
+    .scroll-row::-webkit-scrollbar { display: none; }
+    .scroll-row { -ms-overflow-style: none; scrollbar-width: none; }
+    .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.42); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .25s; }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+    .drawer { position: fixed; top: 0; left: 0; bottom: 0; width: 280px; z-index: 50; transform: translateX(-100%); transition: transform .25s cubic-bezier(.4,0,.2,1); }
+    .drawer.open { transform: translateX(0); }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="muvaz-ui.jsx"></script>
+  <script type="text/babel" src="muvaz-blocks.jsx"></script>
+  <script type="text/babel" src="muvaz-item-page.jsx"></script>
+  <script type="text/babel" src="muvaz-upload-page.jsx"></script>
+  <script type="text/babel" src="muvaz-auth-pages.jsx"></script>
+  <script type="text/babel" src="muvaz-profile-page.jsx"></script>
+  <script type="text/babel" src="muvaz-misc-pages.jsx"></script>
+  <script type="text/babel" src="muvaz-browse-page.jsx"></script>
+
+  <script type="text/babel">
+    // ── Page registry ─────────────────────────────────────────
+    const NAV_GROUPS = [
+      { label:'Home',    pages:[{ id:'home',          name:'Home' }] },
+      { label:'Buying',  pages:[{ id:'browse',         name:'Browse listings' },
+                                { id:'item-v1',       name:'Item page — V1 (hero)' },
+                                { id:'item-v2',       name:'Item page — V2 (editorial)' }] },
+      { label:'Selling', pages:[{ id:'upload',        name:'List new item' }] },
+      { label:'Account', pages:[{ id:'signin',        name:'Sign in' },
+                                { id:'signup',        name:'Sign up' },
+                                { id:'phone-collect', name:'Phone collection' },
+                                { id:'profile',       name:'My profile' }] },
+      { label:'Pages',   pages:[{ id:'error-404',     name:'404 — Not found' },
+                                { id:'help',          name:'Help & feedback' }] },
+    ];
+
+    // ── ProtoDrawer ──
+    function ProtoDrawer({ active, onNavigate, onClose }) {
+      return (
+        <div style={{ width:280, background:'#fff', borderRight:`1px solid ${mBorder}`, height:'100%', display:'flex', flexDirection:'column', boxShadow:'4px 0 20px rgba(0,0,0,0.07)', overflowY:'auto' }}>
+          <div style={{ display:'flex', alignItems:'center', height:56, padding:'0 16px', borderBottom:`1px solid ${mBorder}`, position:'sticky', top:0, background:'#fff', zIndex:1, flexShrink:0 }}>
+            <span style={{ fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:20, letterSpacing:'-0.5px' }}>
+              muvaz<span style={{ color:mAccent }}>.</span>
+            </span>
+            <button onClick={onClose} style={{ marginLeft:'auto', background:'transparent', border:'none', cursor:'pointer', display:'flex', padding:4, borderRadius:mRadiusSm }}>
+              <MClose size={18} stroke={mMuted} />
+            </button>
+          </div>
+          <nav style={{ padding:'10px 8px', flex:1 }}>
+            {NAV_GROUPS.map(group => (
+              <div key={group.label} style={{ marginBottom:6 }}>
+                <p style={{ fontFamily:mFont, fontSize:10, fontWeight:700, letterSpacing:'0.08em', color:'#a1a1aa', textTransform:'uppercase', padding:'6px 12px 4px', margin:0 }}>{group.label}</p>
+                {group.pages.map(p => {
+                  const on = p.id === active;
+                  return (
+                    <div key={p.id} onClick={() => onNavigate(p.id)} style={{ display:'flex', alignItems:'center', padding:'10px 12px', borderRadius:mRadius, marginBottom:2, background:on?mMutedBg:'transparent', color:on?mText:mSubtext, fontFamily:mFont, fontSize:14, fontWeight:on?600:400, cursor:'pointer', transition:'background .1s' }}>
+                      {p.name}
+                      {on && <span style={{ marginLeft:'auto' }}><MChevRight size={14} stroke={mMuted} /></span>}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </nav>
+          <div style={{ padding:16, borderTop:`1px solid ${mBorder}`, flexShrink:0 }}>
+            <div style={{ padding:14, borderRadius:mRadius, background:mText, color:'#fff' }}>
+              <p style={{ fontFamily:mFont, fontWeight:600, fontSize:13, margin:'0 0 2px' }}>Moving out?</p>
+              <p style={{ fontFamily:mFont, fontSize:12, opacity:0.65, margin:'0 0 10px' }}>We'll sell everything for you.</p>
+              <MButton variant="destructive" size="sm" iconRight={<MChevRight size={13} stroke="#fff" />} onClick={() => onNavigate('upload')}>Book a pickup</MButton>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Landing home page (inline) ────────────────────────────
+    const LISTED = [
+      { title:'Velvet armchair',  meta:'£120 · 0.8 km · Kreuzberg', tag:'Like new', rating:'4.8', reviews:'12', saved:true },
+      { title:'IKEA Malm frame',  meta:'£40 · 1.2 km · Neukölln',   tag:'Good',     rating:'4.3', reviews:'8' },
+      { title:'Mountain bike',    meta:'£85 · 3.4 km · Mitte',       tag:'Used',     rating:'4.6', reviews:'21' },
+      { title:'Espresso machine', meta:'£70 · 2.9 km · Mitte',       tag:'Good',     rating:'4.5', reviews:'9' },
+    ];
+    const SOLD = [
+      { title:'Dining table, oak', meta:'£95 · Prenzlauer Berg',  rating:'4.7', reviews:'5',  sold:true },
+      { title:'KitchenAid mixer',  meta:'£110 · Charlottenburg',  rating:'4.9', reviews:'18', sold:true },
+      { title:'Brass floor lamp',  meta:'£35 · Friedrichshain',   rating:'4.4', reviews:'7',  sold:true },
+    ];
+    const TESTIMONIALS = [
+      { q:'Moved to Lisbon in two weeks. Muvaz cleared the whole flat. I never met a single buyer.',      name:'Ana M.', role:'Neukölln → Lisbon',     i:'A' },
+      { q:'Listed 15 items before my move. Every single one sold within 4 days. Unreal service.',         name:'Tom K.', role:'Berlin → Amsterdam',     i:'T' },
+      { q:"Didn't have to deal with a single stranger. Just dropped the stuff off and got paid.",         name:'Sara L.',role:'Prenzlauer Berg',         i:'S' },
+    ];
+
+    function SectionHead({ title, cta }) {
+      return (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', marginBottom:14 }}>
+          <h2 style={{ fontFamily:mFont, fontSize:17, fontWeight:700, color:mText }}>{title}</h2>
+          {cta && <a href="#" style={{ fontFamily:mFont, fontSize:13, fontWeight:500, color:mAccent, textDecoration:'none' }}>{cta}</a>}
+        </div>
+      );
+    }
+    function ScrollRow({ children }) {
+      return (
+        <div className="scroll-row" style={{ display:'flex', gap:14, overflowX:'auto', padding:'0 20px 24px', scrollSnapType:'x mandatory', WebkitOverflowScrolling:'touch' }}>
+          {children}
+          <div style={{ minWidth:4, flexShrink:0 }} />
+        </div>
+      );
+    }
+
+    function LandingHome({ onMenu, onNavigate, onItemClick }) {
+      return (
+        <main>
+          <LandingHeader onMenu={onMenu} />
+
+          {/* Hero */}
+          <section style={{ padding:'28px 20px 24px', background:'#fff', borderBottom:`1px solid ${mBorder}` }}>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:mAccentBg, border:'1px solid rgba(24,24,27,0.12)', borderRadius:999, padding:'4px 10px', marginBottom:14 }}>
+              <span style={{ width:6, height:6, borderRadius:'50%', background:mAccent, display:'inline-block' }} />
+              <span style={{ fontFamily:mFont, fontSize:12, fontWeight:500, color:mAccent }}>Declutter marketplace</span>
+            </div>
+            <h1 style={{ fontFamily:mFont, fontSize:32, fontWeight:900, lineHeight:1.1, letterSpacing:'-0.5px', color:mText, marginBottom:12 }}>
+              Moving out?<br />Have old items?<br /><span style={{ color:mAccent }}>We'll sell it for you.</span>
+            </h1>
+            <p style={{ fontFamily:mFont, fontSize:15, color:mSubtext, lineHeight:1.55, marginBottom:22 }}>
+              Drop your stuff — we list it, vet buyers, and send you the cash. You never deal with a stranger.
+            </p>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              <MButton variant="default" full size="lg" onClick={() => onNavigate('browse')}>Browse items</MButton>
+              <MButton variant="outline" full size="lg" onClick={() => onNavigate('upload')}>List items</MButton>
+            </div>
+          </section>
+
+          {/* Recently listed */}
+          <section style={{ paddingTop:24, background:'#fff', borderTop:`1px solid ${mBorder}` }}>
+            <SectionHead title="Recently listed" cta="See all →" />
+            <ScrollRow>
+              {LISTED.map(item => (
+                <div key={item.title} onClick={() => onItemClick && onItemClick()} style={{ width:180, flexShrink:0, scrollSnapAlign:'start', cursor:'pointer' }}>
+                  <ListCard {...item} />
+                </div>
+              ))}
+            </ScrollRow>
+          </section>
+
+          {/* Recently sold */}
+          <section style={{ paddingTop:24, background:'#fff', borderTop:`1px solid ${mBorder}` }}>
+            <SectionHead title="Recently sold" cta="View all" />
+            <ScrollRow>
+              {SOLD.map(item => (
+                <div key={item.title} style={{ width:180, flexShrink:0, scrollSnapAlign:'start' }}>
+                  <ListCard {...item} />
+                </div>
+              ))}
+            </ScrollRow>
+          </section>
+
+          {/* Testimonials */}
+          <section style={{ paddingTop:24, background:'#fff', borderTop:`1px solid ${mBorder}` }}>
+            <SectionHead title="What people say" />
+            <ScrollRow>
+              {TESTIMONIALS.map(t => (
+                <div key={t.name} style={{ width:280, flexShrink:0, scrollSnapAlign:'start' }}>
+                  <TestimonialCard quote={t.q} name={t.name} role={t.role} initial={t.i} />
+                </div>
+              ))}
+            </ScrollRow>
+          </section>
+
+          {/* How it works */}
+          <section style={{ paddingTop:24, background:'#fff', borderTop:`1px solid ${mBorder}` }}>
+            <SectionHead title="How it works" />
+            <ScrollRow>
+              <HowItWorksCard step={1} title="You list"  body="Snap a few photos. We approve, write the copy, and price it."          icon={<MCamera />} />
+              <HowItWorksCard step={2} title="We sell"   body="Buyers reserve through us. You stay completely anonymous."             icon={<MTag />} />
+              <HowItWorksCard step={3} title="They pay"  body="We pick up, deliver, and transfer the cash straight to you."           icon={<MCheck />} />
+            </ScrollRow>
+          </section>
+
+          {/* Footer */}
+          <footer style={{ background:mText, color:'#fff', padding:'32px 20px 24px' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24, marginBottom:28 }}>
+              {[{ head:'Marketplace', links:['Browse items','List an item','How it works','Pricing'] },
+                { head:'Company',     links:['About','Trust & safety','Contact','Privacy'] }].map(col => (
+                <div key={col.head}>
+                  <p style={{ fontFamily:mFont, fontSize:11, fontWeight:600, letterSpacing:'.06em', color:'#a1a1aa', marginBottom:10, textTransform:'uppercase' }}>{col.head}</p>
+                  <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:8 }}>
+                    {col.links.map(l => <li key={l}><a href="#" style={{ fontFamily:mFont, fontSize:14, color:'#e4e4e7', textDecoration:'none' }}>{l}</a></li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <MSeparator style={{ background:'rgba(255,255,255,0.1)', marginBottom:20 }} />
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <span style={{ fontFamily:mFont, fontWeight:800, fontSize:22, letterSpacing:'-0.5px' }}>muvaz<span style={{ color:mAccent }}>.</span></span>
+              <p style={{ fontFamily:mFont, fontSize:12, color:'#71717a' }}>© 2026 muvaz.online</p>
+            </div>
+          </footer>
+        </main>
+      );
+    }
+
+    // ── ItemPopup ─────────────────────────────────────────────
+    const POPUP_IMGS = [
+      'linear-gradient(160deg,#2a3828 0%,#1a2a1e 45%,#0d1a10 100%)',
+      'linear-gradient(160deg,#1e2a38 0%,#121e2c 45%,#080e18 100%)',
+      'linear-gradient(160deg,#38281a 0%,#2a1a0e 45%,#180e08 100%)',
+      'linear-gradient(160deg,#282838 0%,#1a1a2a 45%,#0e0e18 100%)',
+      'linear-gradient(160deg,#38282a 0%,#2a1a1c 45%,#180e10 100%)',
+    ];
+    const POPUP_PRICE = 120;
+
+    function ItemPopup({ onClose }) {
+      const [activeImg, setActiveImg] = React.useState(0);
+      const [saved,     setSaved]     = React.useState(false);
+      const [mode,      setMode]      = React.useState('view'); // 'view'|'offer'|'confirm'
+      const [amount,    setAmount]    = React.useState('');
+      const [error,     setError]     = React.useState('');
+      const [expanded,  setExpanded]  = React.useState(false);
+
+      const FULL_DESC = 'Beautiful vintage-style velvet armchair in excellent condition. Minimal use, no stains or damage. Deep green velvet fabric, solid oak legs. From a smoke-free, pet-free home. Collection from Kreuzberg or delivery available.';
+
+      const handleSend = () => {
+        const val = Number(amount);
+        if (!amount || val <= 0)    { setError('Enter a valid amount'); return; }
+        if (val >= POPUP_PRICE)     { setError(`Must be below £${POPUP_PRICE}`); return; }
+        setMode('confirm');
+        setError('');
+        setTimeout(() => { setMode('view'); setAmount(''); }, 2400);
+      };
+
+      return (
+        <div onClick={onClose} style={{
+          position:'fixed', inset:0, zIndex:80,
+          background:'rgba(0,0,0,0.65)', backdropFilter:'blur(4px)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          padding:'0 20px', animation:'fadeIn .2s ease',
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            width:'100%', maxWidth:340,
+            height:'74vh', minHeight:500,
+            borderRadius:24, overflow:'hidden', position:'relative',
+            background:POPUP_IMGS[activeImg], transition:'background .35s',
+            boxShadow:'0 24px 80px rgba(0,0,0,0.55)',
+            animation:'scaleIn .25s cubic-bezier(.34,1.56,.64,1)',
+          }}>
+
+            {/* Camera watermark */}
+            <div style={{ position:'absolute', top:'28%', left:'50%', transform:'translate(-50%,-50%)', opacity:0.07, pointerEvents:'none' }}>
+              <MCamera size={72} stroke="#fff" />
+            </div>
+
+            {/* Gradient */}
+            <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top,rgba(0,0,0,0.96) 0%,rgba(0,0,0,0.55) 40%,rgba(0,0,0,0.1) 65%,transparent 100%)', pointerEvents:'none' }} />
+
+            {/* Top-right: ✕ then ❤️ stacked */}
+            <div style={{ position:'absolute', top:12, right:12, zIndex:5, display:'flex', flexDirection:'column', gap:8 }}>
+              <button onClick={onClose} style={{ width:34, height:34, borderRadius:'50%', background:'rgba(0,0,0,0.45)', backdropFilter:'blur(6px)', border:'1px solid rgba(255,255,255,0.15)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <MClose size={14} stroke="#fff" />
+              </button>
+              <button onClick={() => setSaved(s=>!s)} style={{ width:34, height:34, borderRadius:'50%', background:'rgba(0,0,0,0.45)', backdropFilter:'blur(6px)', border:'1px solid rgba(255,255,255,0.15)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <MHeart size={15} stroke={saved?mAccent:'#fff'} fill={saved?mAccent:'none'} sw={2} />
+              </button>
+            </div>
+
+            {/* Horizontal thumbnail strip — top left */}
+            <div className="scroll-row" style={{ position:'absolute', top:12, left:12, right:60, zIndex:5, display:'flex', flexDirection:'row', gap:6, overflowX:'auto' }}>
+              {POPUP_IMGS.map((bg,i) => (
+                <div key={i} onClick={() => setActiveImg(i)} style={{
+                  width:44, height:44, borderRadius:10, background:bg, flexShrink:0, cursor:'pointer',
+                  border:i===activeImg?'2px solid #fff':'1.5px solid rgba(255,255,255,0.22)',
+                  transition:'border .15s',
+                }} />
+              ))}
+            </div>
+
+            {/* Bottom content */}
+            <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'0 16px 16px' }}>
+
+              {/* VIEW mode */}
+              {mode==='view' && (<>
+                <div style={{ display:'flex', gap:6, marginBottom:8, flexWrap:'wrap' }}>
+                  <span style={{ fontFamily:mFont, fontSize:11, fontWeight:600, color:'#fff', background:'rgba(255,255,255,0.18)', backdropFilter:'blur(4px)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:999, padding:'3px 10px' }}>Like new</span>
+                  <span style={{ fontFamily:mFont, fontSize:11, color:'rgba(255,255,255,0.7)', background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:999, padding:'3px 10px' }}>Furniture</span>
+                </div>
+                <h2 style={{ fontFamily:mFont, fontSize:22, fontWeight:900, color:'#fff', margin:'0 0 6px', lineHeight:1.1, letterSpacing:'-0.4px' }}>Velvet armchair</h2>
+
+                {/* Description with read more — scrollable, fixed card height */}
+                <div style={{ maxHeight: expanded ? 120 : 44, overflowY: expanded ? 'auto' : 'hidden', transition:'max-height .3s ease', marginBottom:4 }}>
+                  <p style={{ fontFamily:mFont, fontSize:13, color:'rgba(255,255,255,0.68)', margin:0, lineHeight:1.5 }}>
+                    {FULL_DESC}
+                  </p>
+                </div>
+                <button onClick={() => setExpanded(x=>!x)} style={{ background:'transparent', border:'none', cursor:'pointer', fontFamily:mFont, fontSize:12, color:'rgba(255,255,255,0.45)', textDecoration:'underline', padding:'0 0 10px', display:'block' }}>
+                  {expanded ? 'Show less' : 'Read more'}
+                </button>
+
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+                  <span style={{ fontFamily:mFont, fontSize:20, fontWeight:900, color:'#fff', letterSpacing:'-0.4px' }}>£{POPUP_PRICE}</span>
+                  <span style={{ fontFamily:mFont, fontSize:13, color:'rgba(255,255,255,0.5)' }}>· 0.8 km · Kreuzberg</span>
+                </div>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={() => setMode('offer')} style={{ flex:1, height:44, borderRadius:999, background:'#fff', border:'none', cursor:'pointer', fontFamily:mFont, fontSize:14, fontWeight:700, color:mText }}>Make an offer</button>
+                  <button style={{ flex:1, height:44, borderRadius:999, background:mAccent, border:'none', cursor:'pointer', fontFamily:mFont, fontSize:14, fontWeight:700, color:'#fff' }}>Buy · £{POPUP_PRICE}</button>
+                </div>
+              </>)}
+
+              {/* OFFER mode — single row */}
+              {mode==='offer' && (
+                <div style={{ background:'rgba(10,10,10,0.8)', backdropFilter:'blur(14px)', borderRadius:16, padding:'12px 14px' }}>
+                  <p style={{ fontFamily:mFont, fontSize:12, color:'rgba(255,255,255,0.5)', margin:'0 0 8px' }}>Listed at <strong style={{ color:'#fff' }}>£{POPUP_PRICE}</strong> — offer must be lower</p>
+                  {/* Single row: input + Send + Cancel */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <div style={{ flex:1, display:'flex', alignItems:'center', height:44, borderRadius:12, background:'rgba(255,255,255,0.1)', border:`1.5px solid ${error?'#71717a':'rgba(255,255,255,0.2)'}`, padding:'0 12px', gap:4 }}>
+                      <span style={{ fontFamily:mFont, fontSize:16, fontWeight:700, color:'#fff' }}>£</span>
+                      <input
+                        type="number"
+                        value={amount}
+                        onChange={e => { setAmount(e.target.value); setError(''); }}
+                        placeholder={String(Math.round(POPUP_PRICE * 0.8))}
+                        autoFocus
+                        style={{ flex:1, border:'none', outline:'none', background:'transparent', fontFamily:mFont, fontSize:16, fontWeight:700, color:'#fff', width:0 }}
+                      />
+                    </div>
+                    <button onClick={handleSend} style={{ height:44, padding:'0 16px', borderRadius:12, background:mAccent, border:'none', cursor:'pointer', fontFamily:mFont, fontSize:14, fontWeight:700, color:'#fff', whiteSpace:'nowrap', flexShrink:0 }}>Send</button>
+                    <button onClick={() => { setMode('view'); setAmount(''); setError(''); }} style={{ height:44, padding:'0 10px', borderRadius:12, background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', cursor:'pointer', fontFamily:mFont, fontSize:13, color:'rgba(255,255,255,0.5)', flexShrink:0 }}>✕</button>
+                  </div>
+                  {error && <p style={{ fontFamily:mFont, fontSize:12, color:'#71717a', margin:'6px 0 0' }}>{error}</p>}
+                </div>
+              )}
+
+              {/* CONFIRM */}
+              {mode==='confirm' && (
+                <div style={{ textAlign:'center', padding:'16px', background:'rgba(10,10,10,0.8)', backdropFilter:'blur(14px)', borderRadius:16, display:'flex', alignItems:'center', gap:12 }}>
+                  <div style={{ width:38, height:38, borderRadius:'50%', background:mAccent, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <MCheck size={20} stroke="#fff" />
+                  </div>
+                  <div style={{ textAlign:'left' }}>
+                    <p style={{ fontFamily:mFont, fontSize:14, fontWeight:700, color:'#fff', margin:0 }}>Offer sent!</p>
+                    <p style={{ fontFamily:mFont, fontSize:12, color:'rgba(255,255,255,0.5)', margin:'2px 0 0' }}>We'll notify you when the seller responds.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── App ───────────────────────────────────────────────────
+    function App() {
+      const [page, setPage]             = React.useState('home');
+      const [drawerOpen, setDrawerOpen] = React.useState(false);
+      const [itemOpen,   setItemOpen]   = React.useState(false);
+
+      const navigate  = p => { setPage(p); setDrawerOpen(false); window.scrollTo(0,0); };
+      const openItem  = () => setItemOpen(true);
+      const closeItem = () => setItemOpen(false);
+
+      return (
+        <>
+          <div className={`drawer-overlay${drawerOpen?' open':''}`} onClick={() => setDrawerOpen(false)} />
+          <div className={`drawer${drawerOpen?' open':''}`}>
+            <ProtoDrawer active={page} onNavigate={navigate} onClose={() => setDrawerOpen(false)} />
+          </div>
+
+          {page === 'home'          && <LandingHome      onMenu={() => setDrawerOpen(true)} onNavigate={navigate} onItemClick={openItem} />}
+          {page === 'browse'        && <BrowsePage       onBack={() => navigate('home')} onItemClick={openItem} />}
+          {page === 'item-v1'       && <ItemPageV1       onBack={() => navigate('home')} />}
+          {page === 'item-v2'       && <ItemPageV2       onBack={() => navigate('home')} />}
+          {page === 'upload'        && <UploadPage       onBack={() => navigate('home')} />}
+          {page === 'signin'        && <SignInPage       onNavigate={navigate} />}
+          {page === 'signup'        && <SignUpPage       onNavigate={navigate} />}
+          {page === 'phone-collect' && <PhoneCollectPage onNavigate={navigate} />}
+          {page === 'profile'       && <ProfilePage      onNavigate={navigate} />}
+          {page === 'error-404'     && <ErrorPage        onNavigate={navigate} />}
+          {page === 'help'          && <HelpPage         onNavigate={navigate} />}
+
+          {itemOpen && <ItemPopup onClose={closeItem} />}
+
+          <style>{`
+            @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+            @keyframes scaleIn { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
+          `}</style>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
