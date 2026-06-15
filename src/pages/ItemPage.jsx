@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { CONDITION_LABEL } from '../lib/constants.js'
+import { listingsApi, normalizeListing, offersApi, ordersApi } from '../lib/api.js'
 import { ArrowLeft, MapPin, Star, Check, X } from 'lucide-react'
 import { Button } from '../components/ui/button.jsx'
 import { Badge } from '../components/ui/badge.jsx'
@@ -20,26 +22,52 @@ function imageRatio(i) {
   return '100%'
 }
 
-export default function ItemPage({ item, allItems, onBack, onSelectItem }) {
+export default function ItemPage({ item: initialItem, allItems, onBack, onSelectItem, requireAuth }) {
+  const [item,        setItem]        = useState(initialItem)
   const [activeThumb, setActiveThumb] = useState(0)
   const [offerMode,   setOfferMode]   = useState('idle') // idle | input | sent
   const [amount,      setAmount]      = useState('')
   const [error,       setError]       = useState('')
 
-  useEffect(() => { window.scrollTo(0, 0) }, [item.id])
+  useEffect(() => { window.scrollTo(0, 0) }, [initialItem.id])
+
+  // Re-fetch fresh data from API on open
+  useEffect(() => {
+    listingsApi.getOne(initialItem.id)
+      .then(data => setItem(normalizeListing(data)))
+      .catch(() => {}) // keep showing the initial item on failure
+  }, [initialItem.id])
 
   const related = [
     ...allItems.filter(i => i.id !== item.id && i.cat === item.cat),
     ...allItems.filter(i => i.id !== item.id && i.cat !== item.cat),
   ].slice(0, 10)
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const val = Number(amount)
     if (!amount || isNaN(val) || val <= 0) { setError('Enter a valid amount'); return }
     if (val >= item.price)                 { setError(`Must be below £${item.price}`); return }
-    setOfferMode('sent')
+    setOfferMode('sending')
     setError('')
-    setTimeout(() => { setOfferMode('idle'); setAmount('') }, 2400)
+    try {
+      await offersApi.make(item.id, { amount: val })
+      setOfferMode('sent')
+      setTimeout(() => { setOfferMode('idle'); setAmount('') }, 2600)
+    } catch (e) {
+      setError(e.message)
+      setOfferMode('input')
+    }
+  }
+
+  const handleBuy = async () => {
+    setOfferMode('buying')
+    try {
+      await ordersApi.buy(item.id)
+      setOfferMode('bought')
+    } catch (e) {
+      setError(e.message)
+      setOfferMode('idle')
+    }
   }
 
   const cancelOffer = () => { setOfferMode('idle'); setAmount(''); setError('') }
@@ -87,7 +115,7 @@ export default function ItemPage({ item, allItems, onBack, onSelectItem }) {
 
           {/* Badges */}
           <div className="flex gap-2 mb-3">
-            <Badge variant="secondary" className="rounded-full">{item.condition}</Badge>
+            <Badge variant="secondary" className="rounded-full">{CONDITION_LABEL[item.condition] ?? item.condition}</Badge>
             <Badge variant="outline" className="rounded-full text-zinc-500">{item.cat}</Badge>
           </div>
 
@@ -115,7 +143,7 @@ export default function ItemPage({ item, allItems, onBack, onSelectItem }) {
 
           {/* Tag pills */}
           <div className="flex gap-2 flex-wrap mb-6">
-            {[item.cat, item.condition, item.region].map(tag => (
+            {[item.cat, CONDITION_LABEL[item.condition] ?? item.condition, item.region].map(tag => (
               <span
                 key={tag}
                 className="text-xs font-medium text-zinc-500 bg-zinc-100 rounded-full px-3 py-1"
@@ -125,29 +153,30 @@ export default function ItemPage({ item, allItems, onBack, onSelectItem }) {
             ))}
           </div>
 
-          {/* ── CTA — inline offer ── */}
+          {/* ── CTA — inline offer / buy ── */}
           <div>
+            {/* Idle — both buttons */}
             {offerMode === 'idle' && (
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-12 text-base"
-                  onClick={() => setOfferMode('input')}
-                >
-                  Make an offer
-                </Button>
-                <Button className="flex-1 h-12 text-base">
-                  Buy · £{item.price}
-                </Button>
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <Button variant="outline" className="flex-1 h-12 text-base"
+                    onClick={() => requireAuth ? requireAuth(() => setOfferMode('input')) : setOfferMode('input')}>
+                    Make an offer
+                  </Button>
+                  <Button className="flex-1 h-12 text-base"
+                    onClick={() => requireAuth ? requireAuth(() => handleBuy()) : handleBuy()}>
+                    Buy · £{item.price}
+                  </Button>
+                </div>
+                {error && <p className="text-xs text-red-400">{error}</p>}
               </div>
             )}
 
-            {offerMode === 'input' && (
+            {/* Offer input */}
+            {(offerMode === 'input' || offerMode === 'sending') && (
               <div>
                 <p className="text-xs text-zinc-400 mb-2">
-                  Offer must be below{' '}
-                  <span className="font-semibold text-zinc-900">£{item.price}</span>
-                  {' '}— numbers only
+                  Offer must be below <span className="font-semibold text-zinc-900">£{item.price}</span> — numbers only
                 </p>
                 <div className="flex gap-2 items-center">
                   <div className={cn(
@@ -162,16 +191,15 @@ export default function ItemPage({ item, allItems, onBack, onSelectItem }) {
                       onChange={e => { setAmount(e.target.value); setError('') }}
                       placeholder={String(Math.round(item.price * 0.8))}
                       autoFocus
+                      disabled={offerMode === 'sending'}
                       className="flex-1 bg-transparent border-none outline-none text-base font-bold text-zinc-900 w-0"
                     />
                   </div>
-                  <Button className="h-12 px-5 shrink-0" onClick={handleSend} disabled={!amount}>
-                    Send
+                  <Button className="h-12 px-5 shrink-0" onClick={handleSend} disabled={!amount || offerMode === 'sending'}>
+                    {offerMode === 'sending' ? '…' : 'Send'}
                   </Button>
-                  <button
-                    onClick={cancelOffer}
-                    className="h-12 w-12 flex items-center justify-center rounded-md border border-zinc-200 hover:bg-zinc-50 transition-colors shrink-0"
-                  >
+                  <button onClick={cancelOffer} disabled={offerMode === 'sending'}
+                    className="h-12 w-12 flex items-center justify-center rounded-md border border-zinc-200 hover:bg-zinc-50 transition-colors shrink-0">
                     <X size={16} className="text-zinc-400" />
                   </button>
                 </div>
@@ -179,6 +207,15 @@ export default function ItemPage({ item, allItems, onBack, onSelectItem }) {
               </div>
             )}
 
+            {/* Buying spinner */}
+            {offerMode === 'buying' && (
+              <div className="flex items-center justify-center gap-3 h-12 px-4 rounded-md bg-zinc-50 border border-zinc-200">
+                <div className="w-4 h-4 rounded-full border-2 border-zinc-300 border-t-zinc-900 animate-spin shrink-0" />
+                <p className="text-sm font-semibold text-zinc-900">Placing order…</p>
+              </div>
+            )}
+
+            {/* Offer sent */}
             {offerMode === 'sent' && (
               <div className="flex items-center gap-3 h-12 px-4 rounded-md bg-zinc-50 border border-zinc-200">
                 <div className="w-6 h-6 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
@@ -186,6 +223,19 @@ export default function ItemPage({ item, allItems, onBack, onSelectItem }) {
                 </div>
                 <p className="text-sm font-semibold text-zinc-900">Offer sent!</p>
                 <p className="text-sm text-zinc-400 truncate">We'll notify you when the seller responds.</p>
+              </div>
+            )}
+
+            {/* Order placed */}
+            {offerMode === 'bought' && (
+              <div className="flex items-center gap-3 px-4 py-3.5 rounded-md bg-zinc-900">
+                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                  <Check size={13} color="white" strokeWidth={2.5} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white leading-none mb-0.5">Order placed!</p>
+                  <p className="text-xs text-zinc-400 truncate">We'll send you payment details shortly.</p>
+                </div>
               </div>
             )}
           </div>
@@ -205,7 +255,7 @@ export default function ItemPage({ item, allItems, onBack, onSelectItem }) {
                 <ListCard
                   title={rel.title}
                   meta={`£${rel.price} · ${rel.region}`}
-                  tag={rel.condition}
+                  tag={CONDITION_LABEL[rel.condition] ?? rel.condition}
                   rating={rel.rating}
                   reviews={rel.reviews}
                   saved={rel.saved}

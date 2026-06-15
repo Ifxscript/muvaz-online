@@ -2,15 +2,11 @@ import { X, ChevronRight } from 'lucide-react'
 import { Button } from './ui/button.jsx'
 import { cn } from '../lib/utils.js'
 
-const NAV_ITEMS = [
-  'Home',
-  'Browse items',
-  'List an item',
-  'My profile',
-  'Sign in / Sign up',
-]
-
-export default function MobileDrawer({ open, active, onClose, onNavigate }) {
+export default function MobileDrawer({ open, active, onClose, onNavigate, currentUser, onSignOut }) {
+  const isAdmin = currentUser?.role === 'ADMIN'
+  const NAV_ITEMS = currentUser
+    ? ['Home', 'Browse items', 'List an item', 'My profile', ...(isAdmin ? ['Admin panel'] : [])]
+    : ['Home', 'Browse items', 'List an item', 'Sign in / Sign up']
   return (
     <>
       {/* Overlay */}
@@ -44,6 +40,21 @@ export default function MobileDrawer({ open, active, onClose, onNavigate }) {
           </button>
         </div>
 
+        {/* Logged-in user tile */}
+        {currentUser && (
+          <div className="px-4 py-3 border-b border-zinc-100">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50">
+              <div className="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center text-sm font-bold shrink-0">
+                {currentUser.name?.[0]?.toUpperCase() ?? 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-zinc-900 leading-none truncate">{currentUser.name}</p>
+                <p className="text-xs text-zinc-400 mt-0.5 truncate">{currentUser.email}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Flat nav */}
         <nav className="flex-1 px-2 py-3">
           {NAV_ITEMS.map(label => {
@@ -64,6 +75,16 @@ export default function MobileDrawer({ open, active, onClose, onNavigate }) {
               </button>
             )
           })}
+
+          {/* Sign out — only when logged in */}
+          {currentUser && (
+            <button
+              onClick={() => { onSignOut?.(); onClose() }}
+              className="w-full flex items-center px-3 py-3 rounded-md mt-2 text-[15px] text-red-500 hover:bg-red-50 transition-colors text-left font-normal"
+            >
+              Sign out
+            </button>
+          )}
         </nav>
 
         {/* Footer CTA card */}

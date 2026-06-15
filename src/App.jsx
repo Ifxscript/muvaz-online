@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Menu, ArrowRight, Package, Truck, CreditCard, Star, Check } from 'lucide-react'
+import { Menu, ArrowRight, Package, Search, CreditCard, Check, Star } from 'lucide-react'
 import MobileDrawer from './components/MobileDrawer.jsx'
 import Browse from './pages/Browse.jsx'
 import Auth from './pages/Auth.jsx'
@@ -8,42 +8,36 @@ import Profile from './pages/Profile.jsx'
 import Help from './pages/Help.jsx'
 import NotFound from './pages/NotFound.jsx'
 import ItemPage from './pages/ItemPage.jsx'
-import { ITEMS as ALL_ITEMS } from './data/items.js'
+import Admin from './pages/Admin.jsx'
+import { setToken, clearToken, authApi, listingsApi, normalizeListing, recordVisit } from './lib/api.js'
 import { Button } from './components/ui/button.jsx'
 import { Badge } from './components/ui/badge.jsx'
 import { Separator } from './components/ui/separator.jsx'
 import { Card, CardContent } from './components/ui/card.jsx'
 import ListCard from './components/ListCard.jsx'
 
-// ── Data ──────────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-const ITEMS = ALL_ITEMS.slice(0, 8)
+const fmt = price => `₦${Number(price).toLocaleString('en-NG')}`
+
+// ── Static marketing content ──────────────────────────────────────────────────
 
 const TESTIMONIALS = [
-  { quote: 'Moved to Lisbon in two weeks. Muvaz cleared the whole flat. I never met a single buyer.',     name: 'Ana M.', role: 'Neukölln → Lisbon',    initial: 'A' },
-  { quote: 'Listed 15 items before my move. Every single one sold within 4 days. Unreal service.',        name: 'Tom K.', role: 'Berlin → Amsterdam',    initial: 'T' },
-  { quote: "Didn't have to deal with a single stranger. Just dropped the stuff off and got paid.",         name: 'Sara L.', role: 'Prenzlauer Berg',      initial: 'S' },
+  { quote: 'Listed my old AC and generator before moving office. Both sold in 3 days. Super smooth.',  name: 'Emeka O.',  role: 'Wuse 2, Abuja',   initial: 'E' },
+  { quote: 'Got ₦85k for stuff I was going to throw away. Buyer came straight to my house.',          name: 'Fatima A.', role: 'Gwarinpa, Abuja', initial: 'F' },
+  { quote: 'No stress, no random calls. Buyer saw it, liked it, paid securely through the app.',       name: 'Chidi N.',  role: 'Garki, Abuja',    initial: 'C' },
 ]
 
 const STATS = [
-  { value: '12 400+', label: 'Items sold' },
-  { value: '£1.2M',   label: 'Paid to sellers' },
-  { value: '6',       label: 'Cities active' },
-]
-
-const SOLD = [
-  { id: 1, title: 'Dining table, oak',   meta: '£95 · Prenzlauer Berg',  tag: 'Good',     rating: '4.7', reviews: '5' },
-  { id: 2, title: 'KitchenAid mixer',    meta: '£110 · Charlottenburg',  tag: 'Like new', rating: '4.9', reviews: '18' },
-  { id: 3, title: 'Brass floor lamp',    meta: '£35 · Friedrichshain',   tag: 'Good',     rating: '4.4', reviews: '7' },
-  { id: 4, title: 'Velvet dining chair', meta: '£60 · Kreuzberg',        tag: 'Like new', rating: '4.6', reviews: '9' },
-  { id: 5, title: 'Road bike 54cm',      meta: '£185 · Mitte',           tag: 'Good',     rating: '4.5', reviews: '14' },
-  { id: 6, title: 'Bookshelf, oak',      meta: '£55 · Friedrichshain',   tag: 'Good',     rating: '4.3', reviews: '9' },
+  { value: '2,400+',  label: 'Items sold' },
+  { value: '₦180M+', label: 'Paid to sellers' },
+  { value: 'Abuja',   label: 'Currently serving' },
 ]
 
 const STEPS = [
-  { step: '01', Icon: Package,    title: 'You list',     body: 'Snap a few photos and set a price. Our team reviews, writes the copy, and prices it right.' },
-  { step: '02', Icon: Truck,      title: 'We sell',      body: 'Buyers reserve through muvaz. You stay completely anonymous throughout the process.' },
-  { step: '03', Icon: CreditCard, title: 'You get paid', body: 'We collect, deliver, and transfer the cash to your account within 48 hours of sale.' },
+  { step: '01', Icon: Package,    title: 'List your item',     body: 'Take your own photos, set a price and write a description. We review your listing and put it live.' },
+  { step: '02', Icon: Search,     title: 'Buyers find you',    body: 'Interested buyers browse your listing, make an offer, or buy at your price — all through muvaz.' },
+  { step: '03', Icon: CreditCard, title: 'They come to you',   body: 'The buyer inspects and picks up the item from you directly. Payment is handled securely through muvaz.' },
 ]
 
 const NAV_LINKS = ['Browse', 'How it works', 'Pricing', 'About']
@@ -71,32 +65,123 @@ function SectionLabel({ children }) {
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [page, setPage] = useState('home')
-  const [editItem, setEditItem] = useState(null)
+  const [editItem,     setEditItem]     = useState(null)
   const [selectedItem, setSelectedItem] = useState(null)
+  const [currentUser,       setCurrentUser]       = useState(null)
+  const [authLoading,       setAuthLoading]       = useState(true)
+  const [pendingGoogleUser, setPendingGoogleUser] = useState(null)
+  const [activeListings, setActiveListings] = useState([])
+  const [soldListings,   setSoldListings]   = useState([])
+
+  // ── On mount: restore session + handle OAuth callback ───────────────────────
+  useEffect(() => {
+    recordVisit()
+    const params = new URLSearchParams(window.location.search)
+    const oauthToken = params.get('token')
+
+    const init = async () => {
+      // OAuth failure redirect — show auth page with error
+      if (params.get('error')) {
+        window.history.replaceState({}, '', '/')
+        setPage('auth')
+        setAuthLoading(false)
+        return
+      }
+
+      const token = oauthToken || (typeof localStorage !== 'undefined' ? localStorage.getItem('muvaz_token') : null)
+      if (!token) {
+        const hasVisited = localStorage.getItem('muvaz_visited')
+        if (!hasVisited) {
+          localStorage.setItem('muvaz_visited', '1')
+          setPage('auth')
+        }
+        setAuthLoading(false)
+        return
+      }
+
+      if (oauthToken) {
+        setToken(oauthToken)
+        window.history.replaceState({}, '', '/')
+      }
+
+      try {
+        const user = await authApi.me()
+        setCurrentUser(user)
+        if (!user.profileComplete) {
+          setPendingGoogleUser(user)
+          setPage('auth')
+        }
+      } catch {
+        clearToken()
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+
+    init()
+  }, [])
+
+  // ── Listen for token expiry from api.js ─────────────────────────────────────
+  useEffect(() => {
+    const handler = () => { setCurrentUser(null); setPage('auth') }
+    window.addEventListener('muvaz:unauthenticated', handler)
+    return () => window.removeEventListener('muvaz:unauthenticated', handler)
+  }, [])
+
+  // ── Redirect logged-in users away from the auth page ────────────────────────
+  useEffect(() => {
+    if (page === 'auth' && currentUser) setPage('home')
+  }, [page, currentUser])
+
+  // ── Fetch homepage listings ──────────────────────────────────────────────────
+  useEffect(() => {
+    listingsApi.getAll({ status: 'ACTIVE' })
+      .then(data => setActiveListings(data.map(normalizeListing)))
+      .catch(() => {})
+    listingsApi.getAll({ status: 'SOLD' })
+      .then(data => setSoldListings(data.map(normalizeListing)))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => { window.scrollTo(0, 0) }, [page])
 
   const openItem = item => { setSelectedItem(item); setPage('item') }
   const closeItem = () => { setSelectedItem(null); setPage('home') }
 
+  const handleSignOut = () => { clearToken(); setCurrentUser(null); setPage('home') }
+
+  // Lazy auth gate — call this before any action requiring login
+  const requireAuth = (then) => {
+    if (currentUser) { then(); return true }
+    setPage('auth')
+    return false
+  }
+
+  // ── Auth loading splash ─────────────────────────────────────────────────────
+  if (authLoading) return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <p className="font-extrabold text-xl tracking-tight text-zinc-300 select-none animate-pulse">muvaz.</p>
+    </div>
+  )
+
   if (page === 'browse')  return <Browse onBack={() => setPage('home')} />
-  if (page === 'auth')    return <Auth onBack={() => setPage('home')} onSuccess={() => setPage('home')} />
-  if (page === 'upload')  return <Upload onBack={() => setPage('home')} />
-  if (page === 'profile') return (
-    <Profile
-      onNavigate={setPage}
-      onEdit={item => { setEditItem(item); setPage('edit') }}
-    />
-  )
-  if (page === 'edit') return (
-    <Upload
-      initialItem={editItem}
-      onBack={() => setPage('profile')}
-      onSuccess={() => { setEditItem(null); setPage('profile') }}
-    />
-  )
+  if (page === 'auth')    return <Auth
+    onBack={() => setPage('home')}
+    pendingGoogleUser={pendingGoogleUser}
+    onSuccess={user => { localStorage.setItem('muvaz_visited', '1'); setCurrentUser(user); setPendingGoogleUser(null); setPage('home') }}
+  />
+  if (page === 'upload')  return currentUser
+    ? <Upload onBack={() => setPage('home')} />
+    : (() => { setPage('auth'); return null })()
+  if (page === 'profile') return currentUser
+    ? <Profile currentUser={currentUser} onNavigate={setPage} onSignOut={handleSignOut} onEdit={item => { setEditItem(item); setPage('edit') }} />
+    : (() => { setPage('auth'); return null })()
+  if (page === 'edit') return currentUser
+    ? <Upload initialItem={editItem} onBack={() => setPage('profile')} onSuccess={() => { setEditItem(null); setPage('profile') }} />
+    : (() => { setPage('auth'); return null })()
   if (page === 'help')    return <Help onNavigate={setPage} />
-  if (page === 'item')    return <ItemPage item={selectedItem} allItems={ALL_ITEMS} onBack={closeItem} onSelectItem={openItem} />
+  if (page === 'admin')   return <Admin onNavigate={setPage} />
+  if (page === 'item')    return <ItemPage item={selectedItem} allItems={activeListings} onBack={closeItem} onSelectItem={openItem} requireAuth={requireAuth} />
   if (page !== 'home')    return <NotFound onNavigate={setPage} />
 
   return (
@@ -104,11 +189,11 @@ export default function App() {
 
       {/* ── Announcement bar ── */}
       <div className="bg-zinc-900 text-white text-[11px] font-medium py-2 flex justify-center gap-5 tracking-wide select-none">
-        <span>We pick up</span>
+        <span>Free to list</span>
         <span className="opacity-25">·</span>
-        <span>We vet buyers</span>
+        <span>Secure payment</span>
         <span className="opacity-25">·</span>
-        <span>You never meet a stranger</span>
+        <span>Abuja's marketplace</span>
       </div>
 
       {/* ── Header ── */}
@@ -132,8 +217,18 @@ export default function App() {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-zinc-600" onClick={() => setPage('auth')}>Sign in</Button>
-            <Button size="sm" onClick={() => setPage('upload')}>Start selling</Button>
+            {currentUser ? (
+              <button onClick={() => setPage('profile')}
+                className="flex items-center gap-2 h-9 px-3 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm font-medium text-zinc-700">
+                <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  {currentUser.name?.[0]?.toUpperCase() ?? 'U'}
+                </div>
+                {currentUser.name?.split(' ')[0]}
+              </button>
+            ) : (
+              <Button variant="ghost" size="sm" className="text-zinc-600" onClick={() => setPage('auth')}>Sign in</Button>
+            )}
+            <Button size="sm" onClick={() => requireAuth(() => setPage('upload'))}>Start selling</Button>
           </div>
 
           {/* Mobile hamburger */}
@@ -149,13 +244,16 @@ export default function App() {
       {/* Mobile slide-in drawer */}
       <MobileDrawer
         open={menuOpen}
+        currentUser={currentUser}
         onClose={() => setMenuOpen(false)}
+        onSignOut={handleSignOut}
         onNavigate={label => {
           if (label === 'Home')               setPage('home')
           if (label === 'Browse items')      setPage('browse')
-          if (label === 'List an item')      setPage('upload')
+          if (label === 'List an item')      requireAuth(() => setPage('upload'))
           if (label === 'My profile')        setPage('profile')
           if (label === 'Sign in / Sign up') setPage('auth')
+          if (label === 'Admin panel')       setPage('admin')
           setMenuOpen(false)
         }}
       />
@@ -168,21 +266,21 @@ export default function App() {
           <div className="mb-10 md:mb-0">
             <div className="inline-flex items-center gap-2 bg-zinc-100 border border-zinc-200 rounded-full px-3 py-1 mb-5">
               <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 shrink-0" />
-              <span className="text-xs font-semibold text-zinc-600 tracking-wide">Declutter marketplace · Berlin</span>
+              <span className="text-xs font-semibold text-zinc-600 tracking-wide">Declutter marketplace · Abuja</span>
             </div>
 
             <h1 className="text-[2.6rem] md:text-5xl lg:text-[3.5rem] font-black tracking-tight leading-[1.05] text-zinc-900 mb-4">
-              Moving out?<br />
-              Have old stuff?<br />
-              <span className="text-zinc-400">We'll sell it.</span>
+              Have stuff you<br />
+              no longer need?<br />
+              <span className="text-zinc-400">Sell it on muvaz.</span>
             </h1>
 
             <p className="text-base md:text-lg text-zinc-500 leading-relaxed mb-6 max-w-[420px]">
-              List your items — we photograph, vet buyers, arrange pickup and delivery, then send you the cash. You never deal with a stranger.
+              List your items, set your price, and let buyers come to you. Muvaz handles the payment securely — no random strangers, no awkward haggling.
             </p>
 
             <div className="flex flex-wrap gap-x-5 gap-y-2 mb-6">
-              {['Free to list', '5% on sale only', 'Zero stranger contact'].map(t => (
+              {['Free to list', '5% on sale only', 'Secure payments'].map(t => (
                 <span key={t} className="flex items-center gap-1.5 text-sm text-zinc-500">
                   <Check size={13} className="text-zinc-900 shrink-0" strokeWidth={2.5} />
                   {t}
@@ -213,12 +311,12 @@ export default function App() {
 
           {/* Right: item grid — desktop only */}
           <div className="hidden md:grid grid-cols-2 gap-4">
-            {ITEMS.slice(0, 4).map(item => (
+            {activeListings.slice(0, 4).map(item => (
               <div key={item.id} className="cursor-pointer" onClick={() => openItem(item)}>
                 <ListCard
-                  title={item.title} meta={`£${item.price} · ${item.region}`}
-                  tag={item.condition} rating={item.rating}
-                  reviews={item.reviews} saved={item.saved}
+                  title={item.title} meta={`${fmt(item.price)} · Abuja`}
+                  tag={item.condition} likeCount={item.likeCount}
+                  saved={item.saved} offerCount={item.offerCount}
                 />
               </div>
             ))}
@@ -238,12 +336,12 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── Listed near you ── */}
+      {/* ── Listed in Abuja ── */}
       <section className="pt-6 pb-12 md:py-16 max-w-screen-xl mx-auto">
         <div className="flex items-end justify-between px-5 md:px-8 mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">Listed near you</h2>
-            <p className="text-xs text-zinc-400 mt-0.5 font-medium">Berlin · Updated today</p>
+            <h2 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">Listed in Abuja</h2>
+            <p className="text-xs text-zinc-400 mt-0.5 font-medium">Abuja · Updated today</p>
           </div>
           <Button variant="ghost" size="sm" className="text-zinc-500 gap-1 -mr-2" onClick={() => setPage('browse')}>
             See all <ArrowRight size={13} />
@@ -253,9 +351,9 @@ export default function App() {
         {/* Mobile: horizontal scroll */}
         <div className="md:hidden scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5"
           style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
-          {ITEMS.map(item => (
+          {activeListings.map(item => (
             <div key={item.id} className="w-44 shrink-0 cursor-pointer" style={{ scrollSnapAlign: 'start' }} onClick={() => openItem(item)}>
-              <ListCard title={item.title} meta={`£${item.price} · ${item.region}`} tag={item.condition} rating={item.rating} reviews={item.reviews} saved={item.saved} />
+              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} saved={item.saved} offerCount={item.offerCount} />
             </div>
           ))}
           <div className="w-5 shrink-0" />
@@ -263,15 +361,16 @@ export default function App() {
 
         {/* Desktop: 4-col grid */}
         <div className="hidden md:grid md:grid-cols-4 gap-6 px-8">
-          {ITEMS.map(item => (
+          {activeListings.map(item => (
             <div key={item.id} className="cursor-pointer" onClick={() => openItem(item)}>
-              <ListCard title={item.title} meta={`£${item.price} · ${item.region}`} tag={item.condition} rating={item.rating} reviews={item.reviews} saved={item.saved} />
+              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} saved={item.saved} offerCount={item.offerCount} />
             </div>
           ))}
         </div>
       </section>
 
       {/* ── Recently sold ── */}
+      {soldListings.length > 0 && (
       <section className="pb-12 md:pb-16 max-w-screen-xl mx-auto">
         <div className="flex items-end justify-between px-5 md:px-8 mb-6">
           <div>
@@ -286,23 +385,24 @@ export default function App() {
         {/* Mobile: horizontal scroll */}
         <div className="md:hidden scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5"
           style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
-          {SOLD.map(item => (
+          {soldListings.map(item => (
             <div key={item.id} className="w-44 shrink-0" style={{ scrollSnapAlign: 'start' }}>
-              <ListCard title={item.title} meta={item.meta} tag={item.tag} rating={item.rating} reviews={item.reviews} sold hideSave />
+              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} sold hideSave />
             </div>
           ))}
           <div className="w-5 shrink-0" />
         </div>
 
-        {/* Desktop: 6-col grid (wider, no save button) */}
+        {/* Desktop: 6-col grid */}
         <div className="hidden md:grid md:grid-cols-6 gap-5 px-8">
-          {SOLD.map(item => (
+          {soldListings.map(item => (
             <div key={item.id}>
-              <ListCard title={item.title} meta={item.meta} tag={item.tag} rating={item.rating} reviews={item.reviews} sold hideSave />
+              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} sold hideSave />
             </div>
           ))}
         </div>
       </section>
+      )}
 
       {/* ── How it works ── */}
       <section className="py-12 md:py-20 bg-zinc-50 border-y border-zinc-200">
@@ -310,9 +410,9 @@ export default function App() {
 
           <div className="px-5 md:px-8 mb-8 md:text-center">
             <SectionLabel>How it works</SectionLabel>
-            <h2 className="text-2xl md:text-3xl font-black text-zinc-900 tracking-tight">Three steps. No strangers.</h2>
+            <h2 className="text-2xl md:text-3xl font-black text-zinc-900 tracking-tight">Three steps. That's it.</h2>
             <p className="text-sm md:text-base text-zinc-500 mt-2 max-w-sm mx-auto">
-              We handle everything between listing and payment.
+              List it, get an offer, collect your money.
             </p>
           </div>
 
@@ -413,7 +513,7 @@ export default function App() {
             Ready to<br />declutter?
           </h2>
           <p className="text-zinc-400 text-base md:text-lg leading-relaxed mb-8">
-            Free listing. 5% on sale. We handle everything — you just drop it off.
+            Free to list. 5% on sale. Buyer comes to you — you just get paid.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button size="lg" className="bg-white text-zinc-900 hover:bg-zinc-100 w-full sm:w-auto h-12 px-7 text-base gap-2" onClick={() => setPage('upload')}>
@@ -465,7 +565,7 @@ export default function App() {
             <span className="font-extrabold text-xl tracking-tight text-zinc-900 select-none">
               muvaz<span className="text-zinc-300">.</span>
             </span>
-            <p className="text-xs text-zinc-400">© 2026 muvaz.online · Made in Berlin</p>
+            <p className="text-xs text-zinc-400">© 2026 muvaz.online · Made in Abuja</p>
           </div>
         </div>
       </footer>

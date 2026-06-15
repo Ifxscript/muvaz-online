@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowLeft, Search, X, SlidersHorizontal, LayoutGrid, AlignJustify, Check, Star } from 'lucide-react'
 import { Button } from '../components/ui/button.jsx'
 import { Badge } from '../components/ui/badge.jsx'
@@ -6,12 +6,12 @@ import { Separator } from '../components/ui/separator.jsx'
 import ListCard from '../components/ListCard.jsx'
 import ItemPage from './ItemPage.jsx'
 import { cn } from '../lib/utils.js'
-
-import { ITEMS } from '../data/items.js'
+import { listingsApi, normalizeListing } from '../lib/api.js'
+import { CONDITION_LABEL } from '../lib/constants.js'
 
 const CATS    = ['All', 'Furniture', 'Electronics', 'Clothing', 'Sports', 'Kitchen', 'Other']
 const REGIONS = ['All', 'Kreuzberg', 'Neukölln', 'Mitte', 'Prenzlauer Berg', 'Charlottenburg', 'Schöneberg', 'Friedrichshain']
-const CONDS   = ['All', 'Brand new', 'Like new', 'Good', 'Used', 'For parts']
+const CONDS   = ['All', 'LIKE_NEW', 'GREAT', 'GOOD', 'FAIR']
 const SORTS   = ['Nearest', 'Lowest price', 'Highest price', 'Newest']
 
 function imageRatio(index) {
@@ -77,14 +77,24 @@ export default function Browse({ onBack }) {
   const [grid,        setGrid]        = useState(2)
   const [filterOpen,  setFilterOpen]  = useState(false)
   const [draftRegion, setDraftRegion] = useState('All')
-  const [draftCond,   setDraftCond]   = useState('All')
-  const [draftSort,   setDraftSort]   = useState('Nearest')
-  const [region,      setRegion]      = useState('All')
-  const [cond,        setCond]        = useState('All')
+  const [draftCond,    setDraftCond]    = useState('All')
+  const [draftSort,    setDraftSort]    = useState('Nearest')
+  const [region,       setRegion]       = useState('All')
+  const [cond,         setCond]         = useState('All')
   const [selectedItem, setSelectedItem] = useState(null)
+  const [items,        setItems]        = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [fetchError,   setFetchError]   = useState(null)
+
+  useEffect(() => {
+    listingsApi.getAll()
+      .then(data => setItems((Array.isArray(data) ? data : []).map(normalizeListing)))
+      .catch(e => setFetchError(e.message))
+      .finally(() => setLoading(false))
+  }, [])
 
   if (selectedItem) {
-    return <ItemPage item={selectedItem} allItems={ITEMS} onBack={() => setSelectedItem(null)} onSelectItem={setSelectedItem} />
+    return <ItemPage item={selectedItem} allItems={items} onBack={() => setSelectedItem(null)} onSelectItem={setSelectedItem} />
   }
 
   const activeFilters = (region !== 'All' ? 1 : 0) + (cond !== 'All' ? 1 : 0) + (sort !== 'Nearest' ? 1 : 0)
@@ -93,7 +103,7 @@ export default function Browse({ onBack }) {
   const applyFilter = () => { setRegion(draftRegion); setCond(draftCond); setSort(draftSort); setFilterOpen(false) }
   const clearFilter = () => { setDraftRegion('All'); setDraftCond('All'); setDraftSort('Nearest') }
 
-  const filtered = ITEMS.filter(item => {
+  const filtered = items.filter(item => {
     if (query && !item.title.toLowerCase().includes(query.toLowerCase())) return false
     if (cat !== 'All' && item.cat !== cat) return false
     if (region !== 'All' && item.region !== region) return false
@@ -204,7 +214,7 @@ export default function Browse({ onBack }) {
             <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Condition</p>
             <div className="flex flex-wrap gap-2">
               {CONDS.map(c => (
-                <Chip key={c} active={cond === c} onClick={() => setCond(c)}>{c}</Chip>
+                <Chip key={c} active={cond === c} onClick={() => setCond(c)}>{c === 'All' ? 'All' : CONDITION_LABEL[c]}</Chip>
               ))}
             </div>
           </div>
@@ -213,79 +223,109 @@ export default function Browse({ onBack }) {
         {/* Items area */}
         <div className="flex-1 min-w-0 px-3 md:px-6 pt-3 pb-10">
 
-          {/* Results count */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-zinc-400 font-medium">
-              {filtered.length} item{filtered.length !== 1 ? 's' : ''}
-            </span>
-            <button
-              onClick={openFilter}
-              className="md:hidden text-xs text-zinc-500 font-medium flex items-center gap-1 hover:text-zinc-900 transition-colors"
-            >
-              Sort: <span className="text-zinc-900 font-semibold">{sort}</span>
-            </button>
-          </div>
+          {/* Loading */}
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="w-8 h-8 rounded-full border-2 border-zinc-200 border-t-zinc-900 animate-spin mb-3" />
+              <p className="text-sm text-zinc-400">Loading listings…</p>
+            </div>
+          )}
 
-          {/* Empty state */}
-          {filtered.length === 0 && (
+          {/* Fetch error */}
+          {fetchError && !loading && (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-14 h-14 rounded-full bg-zinc-100 flex items-center justify-center mb-4">
-                <Search size={22} className="text-zinc-400" />
-              </div>
-              <p className="text-base font-semibold text-zinc-900 mb-1">No results</p>
-              <p className="text-sm text-zinc-400 mb-5">Try a different search or adjust your filters.</p>
-              <Button variant="outline" size="sm" onClick={() => { setQuery(''); setCat('All'); setRegion('All'); setCond('All') }}>
-                Clear all filters
-              </Button>
+              <p className="text-sm font-semibold text-zinc-900 mb-1">Couldn't load listings</p>
+              <p className="text-xs text-zinc-400 mb-4">{fetchError}</p>
+              <Button variant="outline" size="sm" onClick={() => {
+                setLoading(true); setFetchError(null)
+                listingsApi.getAll()
+                  .then(data => setItems((Array.isArray(data) ? data : []).map(normalizeListing)))
+                  .catch(e => setFetchError(e.message))
+                  .finally(() => setLoading(false))
+              }}>Retry</Button>
             </div>
           )}
 
-          {/* Grid view — masonry / Pinterest style */}
-          {filtered.length > 0 && grid === 2 && (
-            <div className="columns-2 md:columns-3 lg:columns-4 gap-3">
-              {filtered.map((item, i) => (
-                <div key={item.id} className="break-inside-avoid mb-3 cursor-pointer" onClick={() => setSelectedItem(item)}>
-                  <ListCard
-                    title={item.title}
-                    meta={`£${item.price} · ${item.region}`}
-                    tag={item.condition}
-                    rating={item.rating}
-                    reviews={item.reviews}
-                    saved={item.saved}
-                    imageRatio={imageRatio(i)}
-                  />
+          {/* Results — only shown once loaded */}
+          {!loading && !fetchError && (<>
+
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-zinc-400 font-medium">
+                {filtered.length} item{filtered.length !== 1 ? 's' : ''}
+              </span>
+              <button
+                onClick={openFilter}
+                className="md:hidden text-xs text-zinc-500 font-medium flex items-center gap-1 hover:text-zinc-900 transition-colors"
+              >
+                Sort: <span className="text-zinc-900 font-semibold">{sort}</span>
+              </button>
+            </div>
+
+            {/* Empty state */}
+            {filtered.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-14 h-14 rounded-full bg-zinc-100 flex items-center justify-center mb-4">
+                  <Search size={22} className="text-zinc-400" />
                 </div>
-              ))}
-            </div>
-          )}
+                <p className="text-base font-semibold text-zinc-900 mb-1">No results</p>
+                <p className="text-sm text-zinc-400 mb-5">Try a different search or adjust your filters.</p>
+                <Button variant="outline" size="sm" onClick={() => { setQuery(''); setCat('All'); setRegion('All'); setCond('All') }}>
+                  Clear all filters
+                </Button>
+              </div>
+            )}
 
-          {/* List view */}
-          {filtered.length > 0 && grid === 1 && (
-            <div className="flex flex-col divide-y divide-zinc-100">
-              {filtered.map(item => (
-                <div key={item.id} className="flex gap-3 py-3.5 cursor-pointer" onClick={() => setSelectedItem(item)}>
-                  <div className="w-20 h-16 md:w-24 md:h-20 rounded-xl bg-gradient-to-br from-zinc-200 to-zinc-300 shrink-0" />
-                  <div className="flex-1 min-w-0 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-[15px] font-bold text-zinc-900 leading-tight truncate">{item.title}</p>
-                        <p className="text-[15px] font-black text-zinc-900 shrink-0">£{item.price}</p>
+            {/* Grid view */}
+            {filtered.length > 0 && grid === 2 && (
+              <div className="columns-2 md:columns-3 lg:columns-4 gap-3">
+                {filtered.map((item, i) => (
+                  <div key={item.id} className="break-inside-avoid mb-3 cursor-pointer" onClick={() => setSelectedItem(item)}>
+                    <ListCard
+                      title={item.title}
+                      meta={item.region ? `£${item.price} · ${item.region}` : `£${item.price}`}
+                      tag={CONDITION_LABEL[item.condition] ?? item.condition}
+                      rating={item.rating}
+                      reviews={item.reviews}
+                      saved={item.saved}
+                      imageRatio={imageRatio(i)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* List view */}
+            {filtered.length > 0 && grid === 1 && (
+              <div className="flex flex-col divide-y divide-zinc-100">
+                {filtered.map(item => (
+                  <div key={item.id} className="flex gap-3 py-3.5 cursor-pointer" onClick={() => setSelectedItem(item)}>
+                    <div className="w-20 h-16 md:w-24 md:h-20 rounded-xl bg-gradient-to-br from-zinc-200 to-zinc-300 shrink-0" />
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-[15px] font-bold text-zinc-900 leading-tight truncate">{item.title}</p>
+                          <p className="text-[15px] font-black text-zinc-900 shrink-0">£{item.price}</p>
+                        </div>
+                        {item.region && <p className="text-xs text-zinc-400 mt-0.5">{item.region}</p>}
                       </div>
-                      <p className="text-xs text-zinc-400 mt-0.5">{item.region}</p>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <Badge variant="secondary" className="text-[11px] py-0 px-2 rounded-full">{item.condition}</Badge>
-                      <span className="flex items-center gap-1">
-                        <Star size={11} fill="#18181b" stroke="none" />
-                        <span className="text-xs font-semibold text-zinc-900">{item.rating}</span>
-                        <span className="text-xs text-zinc-400">({item.reviews})</span>
-                      </span>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <Badge variant="secondary" className="text-[11px] py-0 px-2 rounded-full">
+                          {CONDITION_LABEL[item.condition] ?? item.condition}
+                        </Badge>
+                        {item.rating && (
+                          <span className="flex items-center gap-1">
+                            <Star size={11} fill="#18181b" stroke="none" />
+                            <span className="text-xs font-semibold text-zinc-900">{item.rating}</span>
+                            <span className="text-xs text-zinc-400">({item.reviews})</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </>)}
         </div>
       </div>
 
@@ -324,7 +364,7 @@ export default function Browse({ onBack }) {
         <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Condition</p>
         <div className="flex flex-wrap gap-2 mb-8">
           {CONDS.map(c => (
-            <Chip key={c} active={draftCond === c} onClick={() => setDraftCond(c)}>{c}</Chip>
+            <Chip key={c} active={draftCond === c} onClick={() => setDraftCond(c)}>{c === 'All' ? 'All' : CONDITION_LABEL[c]}</Chip>
           ))}
         </div>
 

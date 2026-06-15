@@ -1,108 +1,180 @@
-import { useState } from 'react'
-import { ArrowLeft, Eye, EyeOff, ChevronDown, Check } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ArrowLeft, Eye, EyeOff, ChevronDown, Mail } from 'lucide-react'
 import { Button } from '../components/ui/button.jsx'
-import { Separator } from '../components/ui/separator.jsx'
 import { MGoogle } from '../components/ui.jsx'
 import { cn } from '../lib/utils.js'
+import { authApi, setToken } from '../lib/api.js'
 
-// ── Google account mock (would come from OAuth in production) ──
-const MOCK_GOOGLE = { name: 'Sarah Miller', email: 'sarah.miller@gmail.com', initial: 'S' }
+const OAUTH_URL = `${import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '')}/oauth2/authorization/google`
 
-export default function Auth({ onBack, onSuccess }) {
-  const [tab,       setTab]       = useState('signin')  // 'signin' | 'signup'
-  const [step,      setStep]      = useState('form')    // 'form' | 'phone'
-  const [showPass,  setShowPass]  = useState(false)
-  const [phone,     setPhone]     = useState('')
+export default function Auth({ onBack, onSuccess, pendingGoogleUser }) {
+  const [tab,      setTab]      = useState('signin')
+  const [step,     setStep]     = useState('form')   // 'form' | 'verify-email' | 'phone'
+  const [showPass, setShowPass] = useState(false)
+  const [loading,  setLoading]  = useState(false)
+  const [error,    setError]    = useState('')
 
-  const switchTab = t => { setTab(t); setStep('form') }
+  // form fields
+  const [name,     setName]     = useState('')
+  const [email,    setEmail]    = useState('')
+  const [password, setPassword] = useState('')
+  const [phone,    setPhone]    = useState('')
+  const [country,  setCountry]  = useState('+49')
 
-  // ── Phone collection step (after Google sign-up) ──────────────
+  // google user stored after oauth callback
+  const [googleUser, setGoogleUser] = useState(null)
+
+  // Auto-advance to phone step when coming back from Google OAuth with incomplete profile
+  useEffect(() => {
+    if (pendingGoogleUser) {
+      setGoogleUser(pendingGoogleUser)
+      setStep('phone')
+    }
+  }, [pendingGoogleUser])
+
+  const switchTab = t => { setTab(t); setStep('form'); setError('') }
+  const fullPhone = () => `${country}${phone.replace(/^0/, '')}`
+
+  // ── Sign in ───────────────────────────────────────────────────────────────
+
+  const handleSignIn = async () => {
+    if (!email || !password) { setError('Please fill in all fields.'); return }
+    setLoading(true); setError('')
+    try {
+      const data = await authApi.login({ email, password })
+      setToken(data.token)
+      if (!data.user.emailVerified) { setStep('verify-email'); return }
+      if (!data.user.profileComplete) { setGoogleUser(data.user); setStep('phone'); return }
+      onSuccess(data.user)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Sign up ───────────────────────────────────────────────────────────────
+
+  const handleSignUp = async () => {
+    if (!name || !email || !password || !phone) { setError('Please fill in all fields.'); return }
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
+    setLoading(true); setError('')
+    try {
+      const data = await authApi.register({ name, email, password, phone: fullPhone() })
+      setToken(data.token)
+      if (data.user.emailVerified) {
+        // Auto-verified (Gmail not configured) — go straight in
+        onSuccess(data.user)
+      } else {
+        setStep('verify-email')
+      }
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Complete profile (Google users) ───────────────────────────────────────
+
+  const handleCompleteProfile = async () => {
+    if (!phone) { setError('Please enter your WhatsApp number.'); return }
+    setLoading(true); setError('')
+    try {
+      const data = await authApi.completeProfile({ phone: fullPhone(), name: googleUser?.name ?? name })
+      onSuccess(data)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Email verification screen ─────────────────────────────────────────────
+
+  if (step === 'verify-email') {
+    return (
+      <div className="min-h-screen bg-white font-sans flex flex-col items-center justify-center px-5 text-center">
+        <div className="w-16 h-16 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center mb-6">
+          <Mail size={26} className="text-zinc-700" />
+        </div>
+        <h1 className="text-2xl font-black text-zinc-900 tracking-tight mb-2">Check your email</h1>
+        <p className="text-sm text-zinc-500 leading-relaxed mb-1 max-w-xs">
+          We sent a verification link to <strong className="text-zinc-900">{email}</strong>.
+        </p>
+        <p className="text-xs text-zinc-400 mb-8">Click the link to activate your account — it may take a minute.</p>
+        <Button variant="outline" className="w-full max-w-xs h-12" onClick={() => setStep('form')}>
+          Back to sign in
+        </Button>
+      </div>
+    )
+  }
+
+  // ── Phone collection screen (Google users with profileComplete: false) ────
+
   if (step === 'phone') {
     return (
       <div className="min-h-screen bg-white font-sans flex flex-col">
-
         <div className="px-5 pt-5">
-          <button
-            onClick={() => setStep('form')}
-            className="flex items-center justify-center w-9 h-9 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors mb-8"
-          >
+          <button onClick={() => setStep('form')}
+            className="flex items-center justify-center w-9 h-9 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors mb-8">
             <ArrowLeft size={18} className="text-zinc-700" />
           </button>
         </div>
 
-        <div className="flex-1 px-5">
-          {/* Google account tile */}
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-50 border border-zinc-200 mb-8">
-            <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
-              style={{ background: 'linear-gradient(135deg,#4285F4,#34A853)' }}>
-              {MOCK_GOOGLE.initial}
+        <div className="flex-1 px-5 max-w-sm mx-auto w-full">
+          {googleUser && (
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-50 border border-zinc-200 mb-8">
+              <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
+                style={{ background: 'linear-gradient(135deg,#4285F4,#34A853)' }}>
+                {googleUser.name?.[0] ?? 'G'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-zinc-900 leading-none">{googleUser.name}</p>
+                <p className="text-xs text-zinc-400 mt-0.5 truncate">{googleUser.email}</p>
+              </div>
+              <span className="text-[11px] font-semibold text-zinc-500 bg-zinc-200 rounded-full px-2.5 py-1 shrink-0">Google</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-zinc-900 leading-none">{MOCK_GOOGLE.name}</p>
-              <p className="text-xs text-zinc-400 mt-0.5 truncate">{MOCK_GOOGLE.email}</p>
-            </div>
-            <span className="text-[11px] font-semibold text-zinc-500 bg-zinc-200 rounded-full px-2.5 py-1 shrink-0">Google</span>
-          </div>
+          )}
 
-          {/* Heading */}
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight mb-2">One last step</h1>
           <p className="text-sm text-zinc-500 leading-relaxed mb-8">
             Add your WhatsApp number — this is how we coordinate pickup and delivery.{' '}
-            <span className="text-zinc-400">We never share it with buyers or sellers.</span>
+            <span className="text-zinc-400">Never shared with buyers or sellers.</span>
           </p>
 
-          {/* Phone input */}
-          <label className="block text-sm font-semibold text-zinc-900 mb-2">
-            WhatsApp number
-          </label>
-          <div className="flex gap-2 mb-2">
-            <button className="flex items-center gap-1.5 h-12 px-3 rounded-md border border-zinc-200 bg-white text-sm font-medium text-zinc-700 shrink-0 hover:bg-zinc-50 transition-colors">
-              <span className="text-base">🇩🇪</span>
-              <span>+49</span>
-              <ChevronDown size={13} className="text-zinc-400" />
-            </button>
-            <div className="flex-1 flex items-center h-12 px-3 rounded-md border border-zinc-200 bg-white focus-within:border-zinc-900 transition-colors">
-              <input
-                type="tel"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="123 456 7890"
-                className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400"
-              />
-            </div>
+          <label className="block text-sm font-semibold text-zinc-900 mb-2">WhatsApp number</label>
+          <PhoneInput country={country} setCountry={setCountry} phone={phone} setPhone={setPhone} />
+
+          {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+
+          <div className="flex flex-col gap-3 mt-8">
+            <Button className="w-full h-12 text-base" disabled={loading || !phone} onClick={handleCompleteProfile}>
+              {loading ? 'Saving…' : 'Continue'}
+            </Button>
+            <Button variant="ghost" className="w-full h-11 text-zinc-400" onClick={() => onSuccess(googleUser)}>
+              Skip for now
+            </Button>
           </div>
-          <p className="text-xs text-zinc-400 mb-8 leading-relaxed">
-            We may send a one-time SMS to verify. Standard rates apply.
-          </p>
-
-          <Button className="w-full h-12 text-base mb-3" onClick={onSuccess}>
-            Continue
-          </Button>
-          <Button variant="ghost" className="w-full h-11 text-zinc-400" onClick={onSuccess}>
-            Skip for now
-          </Button>
         </div>
       </div>
     )
   }
 
-  // ── Main form ─────────────────────────────────────────────────
+  // ── Main form ─────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-white font-sans flex flex-col">
 
-      {/* Back */}
       <div className="px-5 pt-5">
-        <button
-          onClick={onBack}
-          className="flex items-center justify-center w-9 h-9 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors"
-        >
+        <button onClick={onBack}
+          className="flex items-center justify-center w-9 h-9 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors">
           <ArrowLeft size={18} className="text-zinc-700" />
         </button>
       </div>
 
       <div className="flex-1 px-5 pt-8 pb-10 max-w-sm mx-auto w-full">
 
-        {/* Wordmark */}
         <p className="text-2xl font-black tracking-tight text-zinc-900 mb-8 select-none">
           muvaz<span className="text-zinc-300">.</span>
         </p>
@@ -110,84 +182,74 @@ export default function Auth({ onBack, onSuccess }) {
         {/* Tab toggle */}
         <div className="flex bg-zinc-100 rounded-full p-1 mb-8">
           {['signin', 'signup'].map(t => (
-            <button
-              key={t}
-              onClick={() => switchTab(t)}
+            <button key={t} onClick={() => switchTab(t)}
               className={cn(
                 'flex-1 py-2 rounded-full text-sm font-semibold transition-all',
-                tab === t
-                  ? 'bg-white shadow-sm text-zinc-900'
-                  : 'text-zinc-500 hover:text-zinc-700'
-              )}
-            >
+                tab === t ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'
+              )}>
               {t === 'signin' ? 'Sign in' : 'Sign up'}
             </button>
           ))}
         </div>
 
-        {/* ── Sign in form ── */}
+        {/* ── Sign in ── */}
         {tab === 'signin' && (
           <div className="flex flex-col gap-4">
             <Field label="Email address">
-              <input type="email" placeholder="you@email.com"
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="you@email.com" onKeyDown={e => e.key === 'Enter' && handleSignIn()}
                 className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400" />
             </Field>
 
             <Field label="Password" right={
-              <span className="text-xs text-zinc-400 cursor-pointer hover:text-zinc-600 transition-colors shrink-0">
-                Forgot?
-              </span>
+              <span className="text-xs text-zinc-400 cursor-pointer hover:text-zinc-600 transition-colors shrink-0">Forgot?</span>
             }>
-              <input type={showPass ? 'text' : 'password'} placeholder="••••••••"
+              <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSignIn()}
                 className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400 w-0" />
               <button onClick={() => setShowPass(s => !s)} className="shrink-0 text-zinc-400 hover:text-zinc-600 transition-colors">
                 {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </Field>
 
-            <Button className="w-full h-12 text-base mt-1">Sign in</Button>
+            {error && <p className="text-xs text-red-500 -mt-1">{error}</p>}
+
+            <Button className="w-full h-12 text-base mt-1" disabled={loading} onClick={handleSignIn}>
+              {loading ? 'Signing in…' : 'Sign in'}
+            </Button>
 
             <Divider />
 
-            <GoogleButton onClick={onSuccess} label="Continue with Google" />
+            <GoogleButton label="Continue with Google" onClick={() => { window.location.href = OAUTH_URL }} />
           </div>
         )}
 
-        {/* ── Sign up form ── */}
+        {/* ── Sign up ── */}
         {tab === 'signup' && (
           <div className="flex flex-col gap-4">
             <Field label="Full name">
-              <input type="text" placeholder="Sarah Miller"
+              <input type="text" value={name} onChange={e => setName(e.target.value)}
+                placeholder="Sarah Miller"
                 className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400" />
             </Field>
 
             <Field label="Email address">
-              <input type="email" placeholder="you@email.com"
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="you@email.com"
                 className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400" />
             </Field>
 
             <div>
-              <label className="block text-sm font-semibold text-zinc-900 mb-2">
-                WhatsApp number
-              </label>
-              <div className="flex gap-2">
-                <button className="flex items-center gap-1.5 h-12 px-3 rounded-md border border-zinc-200 bg-white text-sm font-medium text-zinc-700 shrink-0 hover:bg-zinc-50 transition-colors">
-                  <span className="text-base">🇩🇪</span>
-                  <span>+49</span>
-                  <ChevronDown size={13} className="text-zinc-400" />
-                </button>
-                <div className="flex-1 flex items-center h-12 px-3 rounded-md border border-zinc-200 focus-within:border-zinc-900 transition-colors">
-                  <input type="tel" placeholder="123 456 7890"
-                    className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400" />
-                </div>
-              </div>
+              <label className="block text-sm font-semibold text-zinc-900 mb-2">WhatsApp number</label>
+              <PhoneInput country={country} setCountry={setCountry} phone={phone} setPhone={setPhone} />
               <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
-                This is how we coordinate pickup and delivery — never shared with buyers or sellers.
+                How we coordinate pickup and delivery — never shared with buyers or sellers.
               </p>
             </div>
 
             <Field label="Password">
-              <input type={showPass ? 'text' : 'password'} placeholder="At least 8 characters"
+              <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
                 className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400 w-0" />
               <button onClick={() => setShowPass(s => !s)} className="shrink-0 text-zinc-400 hover:text-zinc-600 transition-colors">
                 {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -201,27 +263,26 @@ export default function Auth({ onBack, onSuccess }) {
               <span className="text-zinc-600 underline underline-offset-2 cursor-pointer">Privacy Policy</span>.
             </p>
 
-            <Button className="w-full h-12 text-base mt-1">Create account</Button>
+            {error && <p className="text-xs text-red-500 -mt-1">{error}</p>}
+
+            <Button className="w-full h-12 text-base mt-1" disabled={loading} onClick={handleSignUp}>
+              {loading ? 'Creating account…' : 'Create account'}
+            </Button>
 
             <Divider />
 
-            <GoogleButton onClick={() => setStep('phone')} label="Continue with Google" />
+            <GoogleButton label="Continue with Google" onClick={() => { window.location.href = OAUTH_URL }} />
           </div>
         )}
 
-        {/* Switch tab hint */}
         <p className="text-sm text-zinc-400 text-center mt-6">
           {tab === 'signin' ? (
             <>No account?{' '}
-              <button onClick={() => switchTab('signup')} className="text-zinc-900 font-semibold underline underline-offset-2">
-                Create one
-              </button>
+              <button onClick={() => switchTab('signup')} className="text-zinc-900 font-semibold underline underline-offset-2">Create one</button>
             </>
           ) : (
             <>Already have an account?{' '}
-              <button onClick={() => switchTab('signin')} className="text-zinc-900 font-semibold underline underline-offset-2">
-                Sign in
-              </button>
+              <button onClick={() => switchTab('signin')} className="text-zinc-900 font-semibold underline underline-offset-2">Sign in</button>
             </>
           )}
         </p>
@@ -258,12 +319,36 @@ function Divider() {
 
 function GoogleButton({ onClick, label }) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full h-12 rounded-md border border-zinc-200 bg-white flex items-center justify-center gap-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors"
-    >
+    <button onClick={onClick}
+      className="w-full h-12 rounded-md border border-zinc-200 bg-white flex items-center justify-center gap-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors">
       <MGoogle />
       {label}
     </button>
+  )
+}
+
+const COUNTRY_CODES = [
+  { flag: '🇩🇪', code: '+49' },
+  { flag: '🇬🇧', code: '+44' },
+  { flag: '🇳🇬', code: '+234' },
+  { flag: '🇺🇸', code: '+1' },
+  { flag: '🇫🇷', code: '+33' },
+]
+
+function PhoneInput({ country, setCountry, phone, setPhone }) {
+  return (
+    <div className="flex gap-2">
+      <select value={country} onChange={e => setCountry(e.target.value)}
+        className="h-12 px-3 rounded-md border border-zinc-200 bg-white text-sm font-medium text-zinc-700 cursor-pointer outline-none shrink-0">
+        {COUNTRY_CODES.map(c => (
+          <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+        ))}
+      </select>
+      <div className="flex-1 flex items-center h-12 px-3 rounded-md border border-zinc-200 focus-within:border-zinc-900 transition-colors">
+        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+          placeholder="123 456 7890"
+          className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400" />
+      </div>
+    </div>
   )
 }

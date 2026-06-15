@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Separator } from '../components/ui/separator.jsx'
 import ListCard from '../components/ListCard.jsx'
+import { CONDITION_LABEL } from '../lib/constants.js'
+import { listingsApi, offersApi, normalizeListing } from '../lib/api.js'
 import {
   MPen, MTrash, MChevLeft, MBadge, MSeparator,
   mFont, mText, mSubtext, mMuted, mMutedBg, mBorder, mBorder2,
@@ -14,67 +16,84 @@ const THUMB_GRADS = [
   'linear-gradient(135deg,#e4e4e8 0%,#d4d4d8 100%)',
 ]
 
-const MY_ADVERTS = [
-  {
-    id: 1, title: 'Velvet armchair', price: 120, condition: 'Like new', cat: 'Furniture',
-    status: 'Active', views: 34,
-    description: 'Beautiful velvet armchair in excellent condition. Minor wear on base only.',
-    offers: [
-      { id: 1, amount: '£100', date: '2 days ago', status: 'pending' },
-      { id: 2, amount: '£95',  date: '3 days ago', status: 'pending' },
-    ],
-  },
-  {
-    id: 2, title: 'IKEA Malm frame', price: 40, condition: 'Good', cat: 'Furniture',
-    status: 'Active', views: 18,
-    description: 'King size IKEA Malm bed frame, white. Dismantled and ready to go.',
-    offers: [],
-  },
-  {
-    id: 3, title: 'Mountain bike', price: 85, condition: 'Used', cat: 'Sports & Fitness',
-    status: 'Paused', views: 52,
-    description: '21-speed mountain bike. Some scratches but fully functional.',
-    offers: [
-      { id: 1, amount: '£70', date: '1 day ago', status: 'pending' },
-    ],
-  },
-]
+const STATUS_LABEL = { ACTIVE: 'Active', PAUSED: 'Paused', PENDING_APPROVAL: 'Pending', REJECTED: 'Rejected', SOLD: 'Sold' }
 
-const MY_SOLD = [
-  { title: 'Dining table, oak', meta: '£95 · Sold Apr 2026',  condition: 'Good' },
-  { title: 'KitchenAid mixer',  meta: '£110 · Sold Mar 2026', condition: 'Like new' },
-  { title: 'Brass floor lamp',  meta: '£35 · Sold Feb 2026',  condition: 'Good' },
-]
+function timeAgo(isoStr) {
+  if (!isoStr) return ''
+  const diff = Date.now() - new Date(isoStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
 
-const MY_SAVED = [
-  { title: 'Leather sofa',   meta: '£280 · Schöneberg', condition: 'Like new', saved: true },
-  { title: 'Vintage desk',   meta: '£90 · Mitte',       condition: 'Good',     saved: true },
-  { title: 'Road bike 54cm', meta: '£200 · Kreuzberg',  condition: 'Used',     saved: false },
-]
+function normalizeOffer(raw) {
+  return {
+    id:           raw.id,
+    amount:       `£${Number(raw.amount).toFixed(0)}`,
+    date:         timeAgo(raw.createdAt),
+    status:       raw.status,
+    note:         raw.note ?? '',
+    buyerName:    raw.buyerName,
+    listingTitle: raw.listingTitle ?? '',
+  }
+}
 
 
 // ── Advert detail sub-page ────────────────────────────────────────────────────
-function MyAdvertPage({ advert: initial, onBack, onEdit }) {
-  const [advert, setAdvert]         = useState(initial)
-  const [offers, setOffers]         = useState(initial.offers)
-  const [activeThumb, setActiveThumb] = useState(0)
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [toast, setToast]           = useState(null)
+function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
+  const [advert,        setAdvert]        = useState(initial)
+  const [offers,        setOffers]        = useState([])
+  const [offersLoading, setOffersLoading] = useState(true)
+  const [activeThumb,   setActiveThumb]   = useState(0)
+  const [deleteOpen,    setDeleteOpen]    = useState(false)
+  const [toast,         setToast]         = useState(null)
+
+  // Fetch offers for this listing on mount
+  useEffect(() => {
+    offersApi.forListing(advert.id)
+      .then(data => setOffers((Array.isArray(data) ? data : []).map(normalizeOffer)))
+      .catch(() => {})
+      .finally(() => setOffersLoading(false))
+  }, [advert.id])
 
   const showToast = msg => {
     setToast(msg)
     setTimeout(() => setToast(null), 2200)
   }
 
-  const toggleStatus = () => {
-    const next = advert.status === 'Active' ? 'Paused' : 'Active'
-    setAdvert(a => ({ ...a, status: next }))
-    showToast(next === 'Paused' ? 'Advert paused' : 'Advert reactivated')
+  const toggleStatus = async () => {
+    try {
+      const updated = await listingsApi.togglePause(advert.id)
+      setAdvert(normalizeListing(updated))
+      showToast(updated.status === 'PAUSED' ? 'Advert paused' : 'Advert reactivated')
+    } catch (e) {
+      showToast(e.message)
+    }
   }
 
-  const handleOffer = (offerId, action) => {
-    setOffers(prev => prev.filter(o => o.id !== offerId))
-    showToast(action === 'accept' ? "Offer accepted — we'll be in touch" : 'Offer declined')
+  const handleDelete = async () => {
+    try {
+      await listingsApi.remove(advert.id)
+      setDeleteOpen(false)
+      onDelete(advert.id)
+      onBack()
+    } catch (e) {
+      showToast(e.message)
+    }
+  }
+
+  const handleOffer = async (offerId, action) => {
+    try {
+      if (action === 'accept') await offersApi.accept(offerId)
+      else await offersApi.decline(offerId)
+      setOffers(prev => prev.filter(o => o.id !== offerId))
+      showToast(action === 'accept' ? "Offer accepted — we'll be in touch" : 'Offer declined')
+    } catch (e) {
+      showToast(e.message)
+    }
   }
 
   return (
@@ -97,12 +116,12 @@ function MyAdvertPage({ advert: initial, onBack, onEdit }) {
           style={{
             fontFamily: mFont, fontSize: 12, fontWeight: 600,
             padding: '6px 14px', borderRadius: 999, cursor: 'pointer',
-            background: advert.status === 'Active' ? mWhite : '#18181b',
-            color: advert.status === 'Active' ? mText : mWhite,
+            background: advert.status === 'ACTIVE' ? mWhite : '#18181b',
+            color: advert.status === 'ACTIVE' ? mText : mWhite,
             border: `1px solid ${mBorder}`,
             boxShadow: '0 1px 3px rgba(0,0,0,0.10)',
           }}>
-          {advert.status}
+          {STATUS_LABEL[advert.status] ?? advert.status}
         </button>
       </div>
 
@@ -125,7 +144,7 @@ function MyAdvertPage({ advert: initial, onBack, onEdit }) {
 
         {/* Badges */}
         <div className="flex gap-2 mb-3">
-          <MBadge variant="secondary">{advert.condition}</MBadge>
+          <MBadge variant="secondary">{CONDITION_LABEL[advert.condition] ?? advert.condition}</MBadge>
           <MBadge variant="outline">{advert.cat}</MBadge>
         </div>
 
@@ -145,7 +164,7 @@ function MyAdvertPage({ advert: initial, onBack, onEdit }) {
 
         {/* Tag pills */}
         <div className="flex gap-2 flex-wrap mb-6">
-          {[advert.cat, advert.condition].map(tag => (
+          {[advert.cat, CONDITION_LABEL[advert.condition] ?? advert.condition].map(tag => (
             <span key={tag} style={{ fontFamily: mFont, fontSize: 12, fontWeight: 500, color: mMuted, background: '#f4f4f5', borderRadius: 999, padding: '4px 12px' }}>
               {tag}
             </span>
@@ -186,7 +205,11 @@ function MyAdvertPage({ advert: initial, onBack, onEdit }) {
           )}
         </div>
 
-        {offers.length === 0 ? (
+        {offersLoading ? (
+          <div style={{ padding: '32px 0', textAlign: 'center' }}>
+            <div style={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${mBorder}`, borderTopColor: mText, animation: 'spin 0.7s linear infinite', margin: '0 auto' }} />
+          </div>
+        ) : offers.length === 0 ? (
           <div style={{ padding: '36px 20px', textAlign: 'center', borderRadius: mRadiusLg, border: `1.5px dashed ${mBorder}`, background: mMutedBg }}>
             <p style={{ fontFamily: mFont, fontSize: 14, fontWeight: 500, color: mMuted, margin: '0 0 4px' }}>No offers yet</p>
             <p style={{ fontFamily: mFont, fontSize: 13, color: '#a1a1aa', margin: 0 }}>Buyer offers will appear here for you to accept or decline</p>
@@ -241,7 +264,7 @@ function MyAdvertPage({ advert: initial, onBack, onEdit }) {
                 This listing will be taken down. Any pending offers will be declined automatically.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button onClick={() => { setDeleteOpen(false); onBack() }} style={{
+                <button onClick={handleDelete} style={{
                   width: '100%', height: 48, borderRadius: mRadiusSm, border: 'none',
                   background: mText, color: mWhite,
                   fontFamily: mFont, fontSize: 15, fontWeight: 600, cursor: 'pointer',
@@ -267,27 +290,46 @@ function MyAdvertPage({ advert: initial, onBack, onEdit }) {
           animation: 'fadeInUp .2s ease',
         }}>{toast}</div>
       )}
-      <style>{`@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`}</style>
+      <style>{`@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }
 
 // ── Profile page ──────────────────────────────────────────────────────────────
-export default function Profile({ onNavigate, onEdit }) {
+export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) {
   const [selectedAdvert, setSelectedAdvert] = useState(null)
-  const [adverts] = useState(MY_ADVERTS)
+  const [adverts,        setAdverts]        = useState([])
+  const [sold,           setSold]           = useState([])
+  const [placedOffers,   setPlacedOffers]   = useState([])
+  const [loading,        setLoading]        = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      listingsApi.mine().catch(() => []),
+      offersApi.mine().catch(() => []),
+    ]).then(([listings, myOffers]) => {
+      const all = Array.isArray(listings) ? listings.map(normalizeListing) : []
+      setAdverts(all.filter(l => l.status !== 'SOLD'))
+      setSold(all.filter(l => l.status === 'SOLD'))
+      setPlacedOffers(Array.isArray(myOffers) ? myOffers.map(normalizeOffer) : [])
+    }).finally(() => setLoading(false))
+  }, [])
+
+  const handleDelete = id => setAdverts(prev => prev.filter(a => a.id !== id))
 
   if (selectedAdvert) {
     return (
       <MyAdvertPage
         advert={selectedAdvert}
         onBack={() => setSelectedAdvert(null)}
+        onDelete={handleDelete}
         onEdit={onEdit}
       />
     )
   }
 
-  const totalOffers = adverts.reduce((n, a) => n + a.offers.length, 0)
+  const activeCount   = adverts.filter(a => a.status === 'ACTIVE').length
+  const listedValue   = adverts.reduce((s, a) => s + (a.price ?? 0), 0)
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>
@@ -306,8 +348,8 @@ export default function Profile({ onNavigate, onEdit }) {
           background: mText, color: '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: mFont, fontWeight: 800, fontSize: 14, flexShrink: 0,
-        }}>N</div>
-        <span style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText }}>Nick O'niel</span>
+        }}>{currentUser?.name?.[0]?.toUpperCase() ?? 'U'}</div>
+        <span style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText }}>{currentUser?.name ?? 'My profile'}</span>
       </div>
 
       <div style={{ paddingBottom: 48 }}>
@@ -315,9 +357,9 @@ export default function Profile({ onNavigate, onEdit }) {
         {/* ── Stats strip ── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: `1px solid ${mBorder}`, padding: '0 20px' }}>
           {[
-            { value: adverts.length, label: 'Active' },
-            { value: MY_SOLD.length, label: 'Sold' },
-            { value: `£${adverts.reduce((s, a) => s + a.price, 0)}`, label: 'Listed value' },
+            { value: loading ? '—' : activeCount,          label: 'Active' },
+            { value: loading ? '—' : sold.length,          label: 'Sold' },
+            { value: loading ? '—' : `£${listedValue}`,    label: 'Listed value' },
           ].map(({ value, label }, i) => (
             <div key={label} style={{
               padding: '16px 0', textAlign: 'center',
@@ -334,28 +376,32 @@ export default function Profile({ onNavigate, onEdit }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 20px', marginBottom: 14 }}>
             <h2 style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText, margin: 0 }}>My adverts</h2>
             <span style={{ background: mText, color: '#fff', fontFamily: mFont, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{adverts.length}</span>
-            {totalOffers > 0 && (
-              <span style={{ background: mAccentBg, color: mAccent, border: `1px solid rgba(24,24,27,0.15)`, fontFamily: mFont, fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999 }}>
-                {totalOffers} offer{totalOffers > 1 ? 's' : ''}
-              </span>
-            )}
           </div>
-          <div className="scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
-            {adverts.map(item => (
-              <div key={item.id} style={{ width: 160, flexShrink: 0, scrollSnapAlign: 'start' }}>
-                <ListCard
-                  title={item.title}
-                  meta={`£${item.price}`}
-                  tag={item.condition}
-                  offerCount={item.offers.length}
-                  paused={item.status === 'Paused'}
-                  hideSave
-                  onClick={() => setSelectedAdvert(item)}
-                />
-              </div>
-            ))}
-            <div style={{ minWidth: 20, flexShrink: 0 }} />
-          </div>
+          {loading ? (
+            <div style={{ padding: '32px 20px', textAlign: 'center' }}>
+              <div style={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${mBorder}`, borderTopColor: mText, animation: 'spin 0.7s linear infinite', margin: '0 auto' }} />
+            </div>
+          ) : adverts.length === 0 ? (
+            <div style={{ margin: '0 20px', padding: '28px 20px', textAlign: 'center', borderRadius: mRadiusLg, border: `1.5px dashed ${mBorder}` }}>
+              <p style={{ fontFamily: mFont, fontSize: 14, color: mMuted, margin: 0 }}>No adverts yet.</p>
+            </div>
+          ) : (
+            <div className="scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+              {adverts.map(item => (
+                <div key={item.id} style={{ width: 160, flexShrink: 0, scrollSnapAlign: 'start' }}>
+                  <ListCard
+                    title={item.title}
+                    meta={`£${item.price}`}
+                    tag={CONDITION_LABEL[item.condition] ?? item.condition}
+                    paused={item.status === 'PAUSED'}
+                    hideSave
+                    onClick={() => setSelectedAdvert(item)}
+                  />
+                </div>
+              ))}
+              <div style={{ minWidth: 20, flexShrink: 0 }} />
+            </div>
+          )}
         </section>
 
         <MSeparator style={{ margin: '24px 0 0' }} />
@@ -364,47 +410,62 @@ export default function Profile({ onNavigate, onEdit }) {
         <section style={{ paddingTop: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 20px', marginBottom: 14 }}>
             <h2 style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText, margin: 0 }}>Sold</h2>
-            <span style={{ background: mMutedBg, color: mMuted, fontFamily: mFont, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{MY_SOLD.length}</span>
+            <span style={{ background: mMutedBg, color: mMuted, fontFamily: mFont, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{sold.length}</span>
           </div>
-          <div className="scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
-            {MY_SOLD.map((item, i) => (
-              <div key={i} style={{ width: 160, flexShrink: 0, scrollSnapAlign: 'start' }}>
-                <ListCard title={item.title} meta={item.meta} tag={item.condition} sold hideSave />
-              </div>
-            ))}
-            <div style={{ minWidth: 20, flexShrink: 0 }} />
-          </div>
+          {sold.length === 0 && !loading ? (
+            <div style={{ margin: '0 20px', padding: '28px 20px', textAlign: 'center', borderRadius: mRadiusLg, border: `1.5px dashed ${mBorder}`, background: mMutedBg }}>
+              <p style={{ fontFamily: mFont, fontSize: 14, color: mMuted, margin: 0 }}>Nothing sold yet.</p>
+            </div>
+          ) : (
+            <div className="scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+              {sold.map(item => (
+                <div key={item.id} style={{ width: 160, flexShrink: 0, scrollSnapAlign: 'start' }}>
+                  <ListCard title={item.title} meta={`£${item.price}`} tag={CONDITION_LABEL[item.condition] ?? item.condition} sold hideSave />
+                </div>
+              ))}
+              <div style={{ minWidth: 20, flexShrink: 0 }} />
+            </div>
+          )}
         </section>
 
         <MSeparator style={{ margin: '24px 0 0' }} />
 
-        {/* Saved */}
+        {/* Saved — no backend endpoint yet */}
         <section style={{ paddingTop: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 20px', marginBottom: 14 }}>
             <h2 style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText, margin: 0 }}>Saved</h2>
-            <span style={{ background: mMutedBg, color: mMuted, fontFamily: mFont, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{MY_SAVED.length}</span>
+            <span style={{ background: mMutedBg, color: mMuted, fontFamily: mFont, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>0</span>
           </div>
-          <div className="scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
-            {MY_SAVED.map((item, i) => (
-              <div key={i} style={{ width: 160, flexShrink: 0, scrollSnapAlign: 'start' }}>
-                <ListCard title={item.title} meta={item.meta} tag={item.condition} saved={item.saved} />
-              </div>
-            ))}
-            <div style={{ minWidth: 20, flexShrink: 0 }} />
+          <div style={{ margin: '0 20px', padding: '28px 20px', textAlign: 'center', borderRadius: mRadiusLg, border: `1.5px dashed ${mBorder}`, background: mMutedBg }}>
+            <p style={{ fontFamily: mFont, fontSize: 14, color: mMuted, margin: 0 }}>Nothing saved yet.</p>
           </div>
         </section>
 
         <MSeparator style={{ margin: '24px 0 0' }} />
 
-        {/* Placed offers — empty state */}
+        {/* Placed offers */}
         <section style={{ padding: '24px 20px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <h2 style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText, margin: 0 }}>Placed offers</h2>
-            <span style={{ background: mMutedBg, color: mMuted, fontFamily: mFont, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>0</span>
+            <span style={{ background: placedOffers.length > 0 ? mText : mMutedBg, color: placedOffers.length > 0 ? '#fff' : mMuted, fontFamily: mFont, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{placedOffers.length}</span>
           </div>
-          <div style={{ padding: '32px 20px', textAlign: 'center', borderRadius: mRadiusLg, border: `1.5px dashed ${mBorder}`, background: mMutedBg }}>
-            <p style={{ fontFamily: mFont, fontSize: 14, color: mMuted, margin: 0 }}>No offers placed yet.</p>
-          </div>
+          {placedOffers.length === 0 ? (
+            <div style={{ padding: '32px 20px', textAlign: 'center', borderRadius: mRadiusLg, border: `1.5px dashed ${mBorder}`, background: mMutedBg }}>
+              <p style={{ fontFamily: mFont, fontSize: 14, color: mMuted, margin: 0 }}>No offers placed yet.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {placedOffers.map(offer => (
+                <div key={offer.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '14px 16px', borderRadius: mRadius, border: `1px solid ${mBorder}` }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontFamily: mFont, fontSize: 14, fontWeight: 600, color: mText, margin: '0 0 2px' }}>{offer.listingTitle}</p>
+                    <p style={{ fontFamily: mFont, fontSize: 12, color: mMuted, margin: 0 }}>{offer.amount} · {offer.date}</p>
+                  </div>
+                  <span style={{ fontFamily: mFont, fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', flexShrink: 0, background: offer.status === 'ACCEPTED' ? mAccentBg : '#f4f4f5', color: offer.status === 'ACCEPTED' ? mAccent : mMuted }}>{offer.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* CTAs */}
@@ -424,12 +485,12 @@ export default function Profile({ onNavigate, onEdit }) {
         {/* Account links */}
         <div style={{ padding: '24px 20px 48px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
           {[
-            { label: 'Edit profile',     weight: 500, route: null },
-            { label: 'Notifications',    weight: 500, route: null },
-            { label: 'Privacy & safety', weight: 500, route: null },
-            { label: 'Sign out',         weight: 600, route: 'home' },
-          ].map(({ label, weight, route }) => (
-            <button key={label} onClick={() => route && onNavigate(route)} style={{
+            { label: 'Edit profile',     weight: 500, route: null, action: null },
+            { label: 'Notifications',    weight: 500, route: null, action: null },
+            { label: 'Privacy & safety', weight: 500, route: null, action: null },
+            { label: 'Sign out',         weight: 600, route: null, action: onSignOut },
+          ].map(({ label, weight, route, action }) => (
+            <button key={label} onClick={() => action ? action() : route && onNavigate(route)} style={{
               height: 40, padding: '0 16px', borderRadius: mRadiusSm,
               border: `1px solid ${mBorder}`, background: '#fff', color: mText,
               fontFamily: mFont, fontSize: 13, fontWeight: weight,
