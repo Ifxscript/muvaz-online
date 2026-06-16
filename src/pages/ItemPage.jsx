@@ -46,7 +46,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
   const handleSend = async () => {
     const val = Number(amount)
     if (!amount || isNaN(val) || val <= 0) { setError('Enter a valid amount'); return }
-    if (val >= item.price)                 { setError(`Must be below £${item.price}`); return }
+    if (val >= item.price)                 { setError(`Must be below ₦${item.price}`); return }
     setOfferMode('sending')
     setError('')
     try {
@@ -126,7 +126,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
 
           {/* Price + location + rating */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-6">
-            <span className="text-3xl font-black text-zinc-900 tracking-tight">£{item.price}</span>
+            <span className="text-3xl font-black text-zinc-900 tracking-tight">₦{item.price}</span>
             <span className="flex items-center gap-1 text-zinc-400">
               <MapPin size={13} />
               <span className="text-sm">{item.region}</span>
@@ -165,7 +165,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
                   </Button>
                   <Button className="flex-1 h-12 text-base"
                     onClick={() => requireAuth ? requireAuth(() => handleBuy()) : handleBuy()}>
-                    Buy · £{item.price}
+                    Buy · ₦{item.price}
                   </Button>
                 </div>
                 {error && <p className="text-xs text-red-400">{error}</p>}
@@ -176,14 +176,14 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
             {(offerMode === 'input' || offerMode === 'sending') && (
               <div>
                 <p className="text-xs text-zinc-400 mb-2">
-                  Offer must be below <span className="font-semibold text-zinc-900">£{item.price}</span> — numbers only
+                  Offer must be below <span className="font-semibold text-zinc-900">₦{item.price}</span> — numbers only
                 </p>
                 <div className="flex gap-2 items-center">
                   <div className={cn(
                     'flex-1 flex items-center h-12 rounded-md border px-3 gap-1.5 bg-white transition-colors',
                     error ? 'border-red-300' : 'border-zinc-300 focus-within:border-zinc-900'
                   )}>
-                    <span className="text-base font-bold text-zinc-900">£</span>
+                    <span className="text-base font-bold text-zinc-900">₦</span>
                     <input
                       type="number"
                       inputMode="numeric"
@@ -254,7 +254,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
               <div key={rel.id} className="break-inside-avoid mb-3 cursor-pointer" onClick={() => onSelectItem?.(rel)}>
                 <ListCard
                   title={rel.title}
-                  meta={`£${rel.price} · ${rel.region}`}
+                  meta={`₦${rel.price} · ${rel.region}`}
                   tag={CONDITION_LABEL[rel.condition] ?? rel.condition}
                   rating={rel.rating}
                   reviews={rel.reviews}

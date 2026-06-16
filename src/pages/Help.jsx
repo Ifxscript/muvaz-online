@@ -13,7 +13,7 @@ const FAQ_DATA = [
   { q: "What if my item doesn't sell?", a: "If your item doesn't sell within 30 days we'll contact you to discuss repricing or arrange a free return." },
   { q: 'Can I list multiple items?',    a: 'Yes — list as many as you like. Each one is reviewed by our team before going live.' },
   { q: 'How does the offer system work?', a: "Buyers submit offers below the listed price. You're notified and can accept or decline. All communication goes through muvaz." },
-  { q: 'Is there a minimum item value?', a: 'We generally list items priced at £10 or above. Fragile or difficult-to-ship items may not be eligible.' },
+  { q: 'Is there a minimum item value?', a: 'We generally list items priced at ₦10 or above. Fragile or difficult-to-ship items may not be eligible.' },
   { q: 'Can buyers contact me directly?', a: 'No — buyers can only communicate through muvaz after payment is confirmed. Your identity and address are always protected.' },
 ]
 

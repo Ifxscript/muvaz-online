@@ -27,7 +27,7 @@ export default function ItemModal({ item, onClose }) {
   const handleSend = () => {
     const val = Number(amount)
     if (!amount || val <= 0)  { setError('Enter a valid amount'); return }
-    if (val >= item.price)    { setError(`Must be below £${item.price}`); return }
+    if (val >= item.price)    { setError(`Must be below ₦${item.price}`); return }
     setMode('confirm')
     setError('')
     setTimeout(() => { setMode('view'); setAmount('') }, 2400)
@@ -145,7 +145,7 @@ export default function ItemModal({ item, onClose }) {
               </button>
 
               <div className="flex items-center gap-2.5 mb-3">
-                <span className="text-[20px] font-black text-white tracking-tight">£{item.price}</span>
+                <span className="text-[20px] font-black text-white tracking-tight">₦{item.price}</span>
                 <span className="text-[13px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
                   · {item.region}
                 </span>
@@ -159,7 +159,7 @@ export default function ItemModal({ item, onClose }) {
                   Make an offer
                 </button>
                 <button className="flex-1 h-11 rounded-full bg-zinc-900 text-white text-[14px] font-bold border-none cursor-pointer">
-                  Buy · £{item.price}
+                  Buy · ₦{item.price}
                 </button>
               </div>
             </>
@@ -172,7 +172,7 @@ export default function ItemModal({ item, onClose }) {
               style={{ background: 'rgba(8,8,8,0.82)', backdropFilter: 'blur(16px)' }}
             >
               <p className="text-[12px] mb-2" style={{ color: 'rgba(255,255,255,0.5)', margin: '0 0 8px' }}>
-                Listed at <strong className="text-white">£{item.price}</strong> — offer must be lower
+                Listed at <strong className="text-white">₦{item.price}</strong> — offer must be lower
               </p>
               <div className="flex items-center gap-2">
                 <div
@@ -182,7 +182,7 @@ export default function ItemModal({ item, onClose }) {
                     border: `1.5px solid ${error ? '#71717a' : 'rgba(255,255,255,0.2)'}`,
                   }}
                 >
-                  <span className="text-[16px] font-bold text-white">£</span>
+                  <span className="text-[16px] font-bold text-white">₦</span>
                   <input
                     type="number"
                     value={amount}

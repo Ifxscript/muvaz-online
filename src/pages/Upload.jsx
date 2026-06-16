@@ -326,7 +326,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
             'flex items-center h-14 rounded-md border overflow-hidden transition-colors',
             price ? 'border-zinc-900' : 'border-zinc-200'
           )}>
-            <span className="text-xl font-black text-zinc-900 px-4 border-r border-zinc-200">£</span>
+            <span className="text-xl font-black text-zinc-900 px-4 border-r border-zinc-200">₦</span>
             <input
               type="number"
               value={price}
@@ -340,7 +340,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
           {payout && (
             <div className="flex items-center justify-between mt-3 px-4 py-3 rounded-md bg-zinc-50 border border-zinc-100">
               <span className="text-sm text-zinc-500">You'll receive</span>
-              <span className="text-sm font-bold text-zinc-900">£{payout}</span>
+              <span className="text-sm font-bold text-zinc-900">₦{payout}</span>
             </div>
           )}
         </section>

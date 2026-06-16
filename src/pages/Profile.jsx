@@ -32,7 +32,7 @@ function timeAgo(isoStr) {
 function normalizeOffer(raw) {
   return {
     id:           raw.id,
-    amount:       `£${Number(raw.amount).toFixed(0)}`,
+    amount:       `₦${Number(raw.amount).toFixed(0)}`,
     date:         timeAgo(raw.createdAt),
     status:       raw.status,
     note:         raw.note ?? '',
@@ -155,7 +155,7 @@ function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
 
         {/* Price + views */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-5">
-          <span style={{ fontFamily: mFont, fontSize: 30, fontWeight: 900, color: mText, letterSpacing: '-1px' }}>£{advert.price}</span>
+          <span style={{ fontFamily: mFont, fontSize: 30, fontWeight: 900, color: mText, letterSpacing: '-1px' }}>₦{advert.price}</span>
           <span style={{ fontFamily: mFont, fontSize: 13, color: mMuted }}>{advert.views} views</span>
         </div>
 
@@ -359,7 +359,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
           {[
             { value: loading ? '—' : activeCount,          label: 'Active' },
             { value: loading ? '—' : sold.length,          label: 'Sold' },
-            { value: loading ? '—' : `£${listedValue}`,    label: 'Listed value' },
+            { value: loading ? '—' : `₦${listedValue}`,    label: 'Listed value' },
           ].map(({ value, label }, i) => (
             <div key={label} style={{
               padding: '16px 0', textAlign: 'center',
@@ -391,7 +391,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
                 <div key={item.id} style={{ width: 160, flexShrink: 0, scrollSnapAlign: 'start' }}>
                   <ListCard
                     title={item.title}
-                    meta={`£${item.price}`}
+                    meta={`₦${item.price}`}
                     tag={CONDITION_LABEL[item.condition] ?? item.condition}
                     paused={item.status === 'PAUSED'}
                     hideSave
@@ -420,7 +420,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
             <div className="scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
               {sold.map(item => (
                 <div key={item.id} style={{ width: 160, flexShrink: 0, scrollSnapAlign: 'start' }}>
-                  <ListCard title={item.title} meta={`£${item.price}`} tag={CONDITION_LABEL[item.condition] ?? item.condition} sold hideSave />
+                  <ListCard title={item.title} meta={`₦${item.price}`} tag={CONDITION_LABEL[item.condition] ?? item.condition} sold hideSave />
                 </div>
               ))}
               <div style={{ minWidth: 20, flexShrink: 0 }} />

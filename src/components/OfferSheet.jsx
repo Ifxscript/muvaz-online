@@ -29,10 +29,10 @@ export default function OfferSheet({ price, open, onClose }) {
   return (
     <BottomSheet open={open} onClose={onClose} title="Make an offer">
       <p style={{ fontFamily: mFont, fontSize: 13, color: mSubtext, margin: '0 0 16px', lineHeight: 1.55 }}>
-        Listed at <strong style={{ color: mText }}>£{price}</strong>. Enter your offer below.
+        Listed at <strong style={{ color: mText }}>₦{price}</strong>. Enter your offer below.
       </p>
       <div style={{ display: 'flex', alignItems: 'center', height: 54, borderRadius: mRadius, border: `1.5px solid ${mBorder2}`, overflow: 'hidden', marginBottom: 12, background: '#fafafa' }}>
-        <span style={{ fontFamily: mFont, fontSize: 22, fontWeight: 700, padding: '0 12px 0 16px', color: mText }}>£</span>
+        <span style={{ fontFamily: mFont, fontSize: 22, fontWeight: 700, padding: '0 12px 0 16px', color: mText }}>₦</span>
         <div style={{ width: 1, height: 30, background: mBorder }} />
         <input
           type="number" value={offer} onChange={e => setOffer(e.target.value)}
@@ -48,7 +48,7 @@ export default function OfferSheet({ price, open, onClose }) {
           const v = String(Math.round(price * f));
           return (
             <button key={f} onClick={() => setOffer(v)} style={{ flex: 1, height: 36, borderRadius: mRadiusSm, border: `1px solid ${offer === v ? mText : mBorder}`, background: offer === v ? mText : '#fff', color: offer === v ? '#fff' : mSubtext, fontFamily: mFont, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
-              £{Math.round(price * f)}
+              ₦{Math.round(price * f)}
             </button>
           );
         })}

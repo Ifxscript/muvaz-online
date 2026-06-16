@@ -282,7 +282,7 @@ export default function Browse({ onBack }) {
                   <div key={item.id} className="break-inside-avoid mb-3 cursor-pointer" onClick={() => setSelectedItem(item)}>
                     <ListCard
                       title={item.title}
-                      meta={item.region ? `£${item.price} · ${item.region}` : `£${item.price}`}
+                      meta={item.region ? `₦${item.price} · ${item.region}` : `₦${item.price}`}
                       tag={CONDITION_LABEL[item.condition] ?? item.condition}
                       rating={item.rating}
                       reviews={item.reviews}
@@ -304,7 +304,7 @@ export default function Browse({ onBack }) {
                       <div>
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-[15px] font-bold text-zinc-900 leading-tight truncate">{item.title}</p>
-                          <p className="text-[15px] font-black text-zinc-900 shrink-0">£{item.price}</p>
+                          <p className="text-[15px] font-black text-zinc-900 shrink-0">₦{item.price}</p>
                         </div>
                         {item.region && <p className="text-xs text-zinc-400 mt-0.5">{item.region}</p>}
                       </div>

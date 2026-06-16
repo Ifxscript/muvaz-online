@@ -15,11 +15,11 @@ export default function BuySheet({ price, title, open, onClose }) {
           <p style={{ fontFamily: mFont, fontSize: 14, fontWeight: 600, margin: 0, color: mText }}>{title}</p>
           <p style={{ fontFamily: mFont, fontSize: 12, color: mMuted, margin: '2px 0 0' }}>Like new · Kreuzberg</p>
         </div>
-        <p style={{ fontFamily: mFont, fontSize: 18, fontWeight: 800, color: mText, margin: 0 }}>£{price}</p>
+        <p style={{ fontFamily: mFont, fontSize: 18, fontWeight: 800, color: mText, margin: 0 }}>₦{price}</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
-        {[['Item price', `£${price}`], ['muvaz fee (5%)', `£${fee.toFixed(2)}`], ['Delivery', 'Free']].map(([k, v]) => (
+        {[['Item price', `₦${price}`], ['muvaz fee (5%)', `₦${fee.toFixed(2)}`], ['Delivery', 'Free']].map(([k, v]) => (
           <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span style={{ fontFamily: mFont, fontSize: 14, color: mSubtext }}>{k}</span>
             <span style={{ fontFamily: mFont, fontSize: 14, color: k === 'Delivery' ? mAccent : mText }}>{v}</span>
@@ -28,7 +28,7 @@ export default function BuySheet({ price, title, open, onClose }) {
         <MSeparator />
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ fontFamily: mFont, fontSize: 15, fontWeight: 700, color: mText }}>Total</span>
-          <span style={{ fontFamily: mFont, fontSize: 15, fontWeight: 700, color: mText }}>£{total}</span>
+          <span style={{ fontFamily: mFont, fontSize: 15, fontWeight: 700, color: mText }}>₦{total}</span>
         </div>
       </div>
 
@@ -38,7 +38,7 @@ export default function BuySheet({ price, title, open, onClose }) {
       </div>
 
       <MButton full style={{ height: 50, background: mAccent, color: '#fff', border: 'none', fontSize: 16, fontWeight: 700 }} onClick={onClose}>
-        Pay £{total}
+        Pay ₦{total}
       </MButton>
     </BottomSheet>
   );

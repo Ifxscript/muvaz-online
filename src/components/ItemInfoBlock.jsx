@@ -15,7 +15,7 @@ export default function ItemInfoBlock({ item, showThumbs, activeImg, setActiveIm
           <MBadge variant="brand" style={{ marginBottom: 8 }}>{item.condition}</MBadge>
           <h1 style={{ fontFamily: mFont, fontSize: 24, fontWeight: 900, color: mText, letterSpacing: '-0.5px', lineHeight: 1.15, margin: 0 }}>{item.title}</h1>
         </div>
-        <p style={{ fontFamily: mFont, fontSize: 30, fontWeight: 900, color: mText, margin: '18px 0 0', letterSpacing: '-0.5px', flexShrink: 0 }}>£{item.price}</p>
+        <p style={{ fontFamily: mFont, fontSize: 30, fontWeight: 900, color: mText, margin: '18px 0 0', letterSpacing: '-0.5px', flexShrink: 0 }}>₦{item.price}</p>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
