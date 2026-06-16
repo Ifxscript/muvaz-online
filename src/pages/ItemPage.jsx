@@ -8,12 +8,7 @@ import { Separator } from '../components/ui/separator.jsx'
 import ListCard from '../components/ListCard.jsx'
 import { cn } from '../lib/utils.js'
 
-const THUMB_GRADS = [
-  'linear-gradient(135deg,#d4d4d8 0%,#c4c4c8 100%)',
-  'linear-gradient(135deg,#c8c8cc 0%,#b8b8bc 100%)',
-  'linear-gradient(135deg,#dcdce0 0%,#cccccc 100%)',
-  'linear-gradient(135deg,#e4e4e8 0%,#d4d4d8 100%)',
-]
+const PLACEHOLDER = 'linear-gradient(135deg,#d4d4d8 0%,#c4c4c8 100%)'
 
 function imageRatio(i) {
   const r = i % 3
@@ -77,12 +72,20 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
 
       <div className="max-w-screen-lg mx-auto">
 
-        {/* ── Main image — 55vh with back button floating on top ── */}
+        {/* ── Main image ── */}
         <div className="relative p-px">
           <div
-            className="w-full aspect-square rounded-2xl transition-all duration-300"
-            style={{ background: THUMB_GRADS[activeThumb] }}
-          />
+            className="w-full aspect-square rounded-2xl overflow-hidden transition-all duration-300"
+            style={{ background: PLACEHOLDER }}
+          >
+            {item.images?.[activeThumb] && (
+              <img
+                src={item.images[activeThumb]}
+                alt={item.title}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
           <button
             onClick={onBack}
             className="fixed top-3 left-3 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-zinc-200 hover:bg-white transition-colors"
@@ -91,24 +94,25 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
           </button>
         </div>
 
-        {/* ── Thumbnail strip ── */}
-        <div className="scroll-row flex gap-2 overflow-x-auto px-4 py-3 scroll-pl-4 border-b border-zinc-100">
-          {THUMB_GRADS.map((g, i) => (
-            <div
-              key={i}
-              onClick={() => setActiveThumb(i)}
-              className="shrink-0 w-14 h-12 rounded-lg cursor-pointer"
-              style={{
-                background: g,
-                border: i === activeThumb
-                  ? '2px solid #18181b'
-                  : '1.5px solid #e4e4e7',
-                transition: 'border .15s',
-              }}
-            />
-          ))}
-          <div className="w-4 shrink-0" />
-        </div>
+        {/* ── Thumbnail strip — only shown if multiple images ── */}
+        {item.images?.length > 1 && (
+          <div className="scroll-row flex gap-2 overflow-x-auto px-4 py-3 scroll-pl-4 border-b border-zinc-100">
+            {item.images.map((url, i) => (
+              <div
+                key={i}
+                onClick={() => setActiveThumb(i)}
+                className="shrink-0 w-14 h-12 rounded-lg cursor-pointer overflow-hidden"
+                style={{
+                  border: i === activeThumb ? '2px solid #18181b' : '1.5px solid #e4e4e7',
+                  transition: 'border .15s',
+                }}
+              >
+                <img src={url} alt="" className="w-full h-full object-cover" />
+              </div>
+            ))}
+            <div className="w-4 shrink-0" />
+          </div>
+        )}
 
         {/* ── Details ── */}
         <div className="px-5 md:px-8 pt-6 pb-4">
