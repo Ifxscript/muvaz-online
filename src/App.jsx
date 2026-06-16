@@ -317,6 +317,7 @@ export default function App() {
                   title={item.title} meta={`${fmt(item.price)} · Abuja`}
                   tag={item.condition} likeCount={item.likeCount}
                   saved={item.saved} offerCount={item.offerCount}
+                  image={item.images?.[0]}
                 />
               </div>
             ))}
@@ -353,7 +354,7 @@ export default function App() {
           style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
           {activeListings.map(item => (
             <div key={item.id} className="w-44 shrink-0 cursor-pointer" style={{ scrollSnapAlign: 'start' }} onClick={() => openItem(item)}>
-              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} saved={item.saved} offerCount={item.offerCount} />
+              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} saved={item.saved} offerCount={item.offerCount} image={item.images?.[0]} />
             </div>
           ))}
           <div className="w-5 shrink-0" />
@@ -363,7 +364,7 @@ export default function App() {
         <div className="hidden md:grid md:grid-cols-4 gap-6 px-8">
           {activeListings.map(item => (
             <div key={item.id} className="cursor-pointer" onClick={() => openItem(item)}>
-              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} saved={item.saved} offerCount={item.offerCount} />
+              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} saved={item.saved} offerCount={item.offerCount} image={item.images?.[0]} />
             </div>
           ))}
         </div>
@@ -387,7 +388,7 @@ export default function App() {
           style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
           {soldListings.map(item => (
             <div key={item.id} className="w-44 shrink-0" style={{ scrollSnapAlign: 'start' }}>
-              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} sold hideSave />
+              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} sold hideSave image={item.images?.[0]} />
             </div>
           ))}
           <div className="w-5 shrink-0" />
@@ -397,7 +398,7 @@ export default function App() {
         <div className="hidden md:grid md:grid-cols-6 gap-5 px-8">
           {soldListings.map(item => (
             <div key={item.id}>
-              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} sold hideSave />
+              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} sold hideSave image={item.images?.[0]} />
             </div>
           ))}
         </div>

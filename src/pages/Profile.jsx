@@ -395,6 +395,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
                     tag={CONDITION_LABEL[item.condition] ?? item.condition}
                     paused={item.status === 'PAUSED'}
                     hideSave
+                    image={item.images?.[0]}
                     onClick={() => setSelectedAdvert(item)}
                   />
                 </div>
@@ -420,7 +421,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
             <div className="scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
               {sold.map(item => (
                 <div key={item.id} style={{ width: 160, flexShrink: 0, scrollSnapAlign: 'start' }}>
-                  <ListCard title={item.title} meta={`₦${item.price}`} tag={CONDITION_LABEL[item.condition] ?? item.condition} sold hideSave />
+                  <ListCard title={item.title} meta={`₦${item.price}`} tag={CONDITION_LABEL[item.condition] ?? item.condition} sold hideSave image={item.images?.[0]} />
                 </div>
               ))}
               <div style={{ minWidth: 20, flexShrink: 0 }} />

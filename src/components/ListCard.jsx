@@ -1,6 +1,6 @@
 import { MHeart, MChevRight, mFont, mText, mSubtext, mMuted, mBorder, mWhite, mAccent } from './ui.jsx';
 
-export default function ListCard({ title, meta, tag, likeCount, saved, sold, offerCount, paused, hideSave, onClick, style, imageRatio = '68%' }) {
+export default function ListCard({ title, meta, tag, likeCount, saved, sold, offerCount, paused, hideSave, image, onClick, style, imageRatio = '68%' }) {
   const Wrapper = onClick ? 'button' : 'div';
   const wrapperStyle = {
     display: 'flex', flexDirection: 'column', gap: 0,
@@ -13,6 +13,9 @@ export default function ListCard({ title, meta, tag, likeCount, saved, sold, off
   return (
     <Wrapper onClick={onClick} style={wrapperStyle}>
       <div style={{ position: 'relative', width: '100%', paddingBottom: imageRatio, borderRadius: 16, background: 'linear-gradient(135deg, #d4d4d8 0%, #c4c4c8 100%)', overflow: 'hidden', flexShrink: 0 }}>
+        {image && (
+          <img src={image} alt={title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        )}
         {tag && !offerCount && (
           <span style={{ position: 'absolute', top: 10, left: 10, fontFamily: mFont, fontSize: 11, fontWeight: 500, background: mWhite, color: mSubtext, border: `1px solid ${mBorder}`, borderRadius: 999, padding: '2px 8px', zIndex: 1 }}>{tag}</span>
         )}

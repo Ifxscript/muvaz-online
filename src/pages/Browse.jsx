@@ -287,6 +287,7 @@ export default function Browse({ onBack }) {
                       rating={item.rating}
                       reviews={item.reviews}
                       saved={item.saved}
+                      image={item.images?.[0]}
                       imageRatio={imageRatio(i)}
                     />
                   </div>

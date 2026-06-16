@@ -259,6 +259,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
                   rating={rel.rating}
                   reviews={rel.reviews}
                   saved={rel.saved}
+                  image={rel.images?.[0]}
                   imageRatio={imageRatio(i)}
                 />
               </div>
