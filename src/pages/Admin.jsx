@@ -69,9 +69,9 @@ function ActionBtn({ children, dark, danger, onClick }) {
     <button onClick={onClick} style={{
       fontFamily: mFont, fontSize: 13, fontWeight: 600,
       padding: '8px 14px', borderRadius: mRadiusSm,
-      border: danger ? '1px solid #fecaca' : `1px solid ${mBorder}`,
-      background: dark ? mText : danger ? '#fef2f2' : mWhite,
-      color: dark ? mWhite : danger ? '#dc2626' : mText,
+      border: `1px solid ${dark ? mText : mBorder2}`,
+      background: dark ? mText : mWhite,
+      color: dark ? mWhite : mText,
       cursor: 'pointer', whiteSpace: 'nowrap',
     }}>{children}</button>
   )
@@ -96,7 +96,7 @@ function RejectModal({ listing, onConfirm, onCancel }) {
           style={{ width: '100%', padding: '10px 12px', borderRadius: mRadiusSm, border: `1px solid ${mBorder}`, fontFamily: mFont, fontSize: 14, color: mText, resize: 'none', outline: 'none', boxSizing: 'border-box' }} />
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
           <button onClick={onCancel} style={{ flex: 1, height: 40, borderRadius: mRadiusSm, border: `1px solid ${mBorder}`, background: mWhite, color: mText, fontFamily: mFont, fontSize: 14, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={() => reason.trim() && onConfirm(reason)} style={{ flex: 1, height: 40, borderRadius: mRadiusSm, border: 'none', background: '#dc2626', color: mWhite, fontFamily: mFont, fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: reason.trim() ? 1 : 0.4 }}>Reject</button>
+          <button onClick={() => reason.trim() && onConfirm(reason)} style={{ flex: 1, height: 40, borderRadius: mRadiusSm, border: 'none', background: mText, color: mWhite, fontFamily: mFont, fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: reason.trim() ? 1 : 0.3 }}>Reject</button>
         </div>
       </div>
     </>
@@ -293,19 +293,42 @@ function ListingsTab() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {listings.map(listing => (
-            <div key={listing.id} style={{ borderRadius: mRadius, border: `1px solid ${mBorder}`, background: mWhite, padding: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: mFont, fontSize: 15, fontWeight: 700, color: mText, margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listing.title}</p>
-                  <p style={{ fontFamily: mFont, fontSize: 12, color: mMuted, margin: 0 }}>
-                    {listing.ownerName} · {listing.cat} · {CONDITION_LABEL[listing.condition] ?? listing.condition} · {timeAgo(listing.createdAt)}
-                  </p>
+            <div key={listing.id} style={{ borderRadius: mRadius, border: `1px solid ${mBorder}`, background: mWhite, overflow: 'hidden' }}>
+
+              {/* Image strip */}
+              {listing.images?.length > 0 ? (
+                <div style={{ display: 'flex', gap: 4, padding: '10px 10px 0' }}>
+                  {listing.images.slice(0, 4).map((url, i) => (
+                    <div key={i} style={{ flex: 1, aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: mMutedBg }}>
+                      <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    </div>
+                  ))}
                 </div>
-                <p style={{ fontFamily: mFont, fontSize: 18, fontWeight: 900, color: mText, margin: '0 0 0 12px', letterSpacing: '-0.5px', flexShrink: 0 }}>₦{Number(listing.price).toLocaleString('en-NG')}</p>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <ActionBtn dark onClick={() => approve(listing.id)}>Approve</ActionBtn>
-                <ActionBtn danger onClick={() => setRejectTarget(listing)}>Reject</ActionBtn>
+              ) : (
+                <div style={{ height: 80, background: mMutedBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontFamily: mFont, fontSize: 11, color: mMuted }}>No images</span>
+                </div>
+              )}
+
+              <div style={{ padding: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontFamily: mFont, fontSize: 15, fontWeight: 700, color: mText, margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listing.title}</p>
+                    <p style={{ fontFamily: mFont, fontSize: 12, color: mMuted, margin: 0 }}>
+                      {listing.ownerName} · {listing.cat} · {CONDITION_LABEL[listing.condition] ?? listing.condition} · {timeAgo(listing.createdAt)}
+                    </p>
+                    {listing.description && (
+                      <p style={{ fontFamily: mFont, fontSize: 12, color: mSubtext, margin: '6px 0 0', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {listing.description}
+                      </p>
+                    )}
+                  </div>
+                  <p style={{ fontFamily: mFont, fontSize: 16, fontWeight: 900, color: mText, margin: '0 0 0 12px', letterSpacing: '-0.5px', flexShrink: 0 }}>₦{Number(listing.price).toLocaleString('en-NG')}</p>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <ActionBtn dark onClick={() => approve(listing.id)}>Approve</ActionBtn>
+                  <ActionBtn danger onClick={() => setRejectTarget(listing)}>Reject</ActionBtn>
+                </div>
               </div>
             </div>
           ))}
