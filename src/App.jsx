@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { Menu, ArrowRight, Package, Search, CreditCard, Check, Star } from 'lucide-react'
 import MobileDrawer from './components/MobileDrawer.jsx'
 import Browse from './pages/Browse.jsx'
@@ -143,17 +143,68 @@ export default function App() {
       .catch(() => {})
   }, [])
 
-  useEffect(() => { window.scrollTo(0, 0) }, [page])
+  // ── Navigation stack with per-frame scroll memory ───────────────────────────
+  // The app is single-URL/state-based, so we keep our own history stack. Each
+  // forward navigation saves the current scroll position; going back restores it.
+  const historyRef       = useRef([])
+  const pendingScrollRef = useRef(null)
 
-  const openItem = item => { setSelectedItem(item); setPage('item') }
-  const closeItem = () => { setSelectedItem(null); setPage('home') }
+  const navTo = (nextPage, { item, editItem: ed } = {}) => {
+    historyRef.current.push({ page, selectedItem, editItem, scrollY: window.scrollY })
+    if (item !== undefined) setSelectedItem(item)
+    if (ed   !== undefined) setEditItem(ed)
+    pendingScrollRef.current = 0
+    window.history.pushState({ depth: historyRef.current.length }, '')
+    setPage(nextPage)
+  }
 
-  const handleSignOut = () => { clearToken(); setCurrentUser(null); setPage('home') }
+  // In-app back delegates to the browser so the OS/hardware back button stays in sync
+  const navBack = () => {
+    if (historyRef.current.length > 0) window.history.back()
+    else setPage('home')
+  }
+
+  // Browser/OS back → pop our stack and restore page + scroll
+  useEffect(() => {
+    const onPop = () => {
+      const frame = historyRef.current.pop()
+      if (!frame) { pendingScrollRef.current = 0; setPage('home'); return }
+      setSelectedItem(frame.selectedItem)
+      setEditItem(frame.editItem)
+      pendingScrollRef.current = frame.scrollY
+      setPage(frame.page)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
+  // Apply the pending scroll target after the new page has rendered
+  useLayoutEffect(() => {
+    if (pendingScrollRef.current != null) {
+      window.scrollTo(0, pendingScrollRef.current)
+      pendingScrollRef.current = null
+    }
+  }, [page, selectedItem, editItem])
+
+  const openItem = item => navTo('item', { item })
+  const closeItem = () => navBack()
+
+  // Toggle save/like on a listing (requires auth). Updates both lists from the API response.
+  const toggleSave = item => requireAuth(async () => {
+    try {
+      const updated = normalizeListing(await listingsApi.toggleSave(item.id))
+      const apply = arr => arr.map(x => x.id === updated.id ? { ...x, saved: updated.saved, likeCount: updated.likeCount } : x)
+      setActiveListings(apply)
+      setSoldListings(apply)
+    } catch { /* ignore — heart simply won't change */ }
+  })
+
+  const handleSignOut = () => { clearToken(); setCurrentUser(null); historyRef.current = []; setPage('home') }
 
   // Lazy auth gate — call this before any action requiring login
   const requireAuth = (then) => {
     if (currentUser) { then(); return true }
-    setPage('auth')
+    navTo('auth')
     return false
   }
 
@@ -164,25 +215,25 @@ export default function App() {
     </div>
   )
 
-  if (page === 'browse')  return <Browse onBack={() => setPage('home')} />
+  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} />
   if (page === 'auth')    return <Auth
-    onBack={() => setPage('home')}
+    onBack={navBack}
     pendingGoogleUser={pendingGoogleUser}
-    onSuccess={user => { localStorage.setItem('muvaz_visited', '1'); setCurrentUser(user); setPendingGoogleUser(null); setPage('home') }}
+    onSuccess={user => { localStorage.setItem('muvaz_visited', '1'); setCurrentUser(user); setPendingGoogleUser(null); historyRef.current = []; setPage('home') }}
   />
   if (page === 'upload')  return currentUser
-    ? <Upload onBack={() => setPage('home')} />
+    ? <Upload onBack={navBack} />
     : (() => { setPage('auth'); return null })()
   if (page === 'profile') return currentUser
-    ? <Profile currentUser={currentUser} onNavigate={setPage} onSignOut={handleSignOut} onEdit={item => { setEditItem(item); setPage('edit') }} />
+    ? <Profile currentUser={currentUser} onNavigate={p => navTo(p)} onSignOut={handleSignOut} onEdit={item => navTo('edit', { editItem: item })} />
     : (() => { setPage('auth'); return null })()
   if (page === 'edit') return currentUser
-    ? <Upload initialItem={editItem} onBack={() => setPage('profile')} onSuccess={() => { setEditItem(null); setPage('profile') }} />
+    ? <Upload initialItem={editItem} onBack={navBack} onSuccess={navBack} />
     : (() => { setPage('auth'); return null })()
-  if (page === 'help')    return <Help onNavigate={setPage} />
-  if (page === 'admin')   return <Admin onNavigate={setPage} />
+  if (page === 'help')    return <Help onNavigate={p => navTo(p)} />
+  if (page === 'admin')   return <Admin onNavigate={p => navTo(p)} />
   if (page === 'item')    return <ItemPage item={selectedItem} allItems={activeListings} onBack={closeItem} onSelectItem={openItem} requireAuth={requireAuth} />
-  if (page !== 'home')    return <NotFound onNavigate={setPage} />
+  if (page !== 'home')    return <NotFound onNavigate={p => navTo(p)} />
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -201,7 +252,7 @@ export default function App() {
         <div className="flex items-center justify-between h-14 px-4 md:h-16 md:px-8 max-w-screen-xl mx-auto">
 
           {/* Wordmark */}
-          <button onClick={() => setPage('home')} className="font-extrabold text-xl tracking-tight text-zinc-900 select-none bg-transparent border-none cursor-pointer p-0">
+          <button onClick={() => navTo('home')} className="font-extrabold text-xl tracking-tight text-zinc-900 select-none bg-transparent border-none cursor-pointer p-0">
             muvaz<span className="text-zinc-300">.</span>
           </button>
 
@@ -209,8 +260,8 @@ export default function App() {
           <nav className="hidden md:flex items-center gap-7">
             {NAV_LINKS.map(n => (
               <button key={n} onClick={() => {
-                if (n === 'Browse') setPage('browse')
-                else if (n === 'How it works') setPage('help')
+                if (n === 'Browse') navTo('browse')
+                else navTo('help')   // How it works / Pricing / About all live on Help for now
               }} className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors font-medium bg-transparent border-none cursor-pointer p-0">{n}</button>
             ))}
           </nav>
@@ -218,7 +269,7 @@ export default function App() {
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-2">
             {currentUser ? (
-              <button onClick={() => setPage('profile')}
+              <button onClick={() => navTo('profile')}
                 className="flex items-center gap-2 h-9 px-3 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm font-medium text-zinc-700">
                 <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
                   {currentUser.name?.[0]?.toUpperCase() ?? 'U'}
@@ -226,9 +277,9 @@ export default function App() {
                 {currentUser.name?.split(' ')[0]}
               </button>
             ) : (
-              <Button variant="ghost" size="sm" className="text-zinc-600" onClick={() => setPage('auth')}>Sign in</Button>
+              <Button variant="ghost" size="sm" className="text-zinc-600" onClick={() => navTo('auth')}>Sign in</Button>
             )}
-            <Button size="sm" onClick={() => requireAuth(() => setPage('upload'))}>Start selling</Button>
+            <Button size="sm" onClick={() => requireAuth(() => navTo('upload'))}>Start selling</Button>
           </div>
 
           {/* Mobile hamburger */}
@@ -248,12 +299,12 @@ export default function App() {
         onClose={() => setMenuOpen(false)}
         onSignOut={handleSignOut}
         onNavigate={label => {
-          if (label === 'Home')               setPage('home')
-          if (label === 'Browse items')      setPage('browse')
-          if (label === 'List an item')      requireAuth(() => setPage('upload'))
-          if (label === 'My profile')        setPage('profile')
-          if (label === 'Sign in / Sign up') setPage('auth')
-          if (label === 'Admin panel')       setPage('admin')
+          if (label === 'Home')               navTo('home')
+          if (label === 'Browse items')      navTo('browse')
+          if (label === 'List an item')      requireAuth(() => navTo('upload'))
+          if (label === 'My profile')        navTo('profile')
+          if (label === 'Sign in / Sign up') navTo('auth')
+          if (label === 'Admin panel')       navTo('admin')
           setMenuOpen(false)
         }}
       />
@@ -289,10 +340,10 @@ export default function App() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-5">
-              <Button size="lg" className="w-full sm:w-auto gap-2 text-base h-12 px-7" onClick={() => setPage('browse')}>
+              <Button size="lg" className="w-full sm:w-auto gap-2 text-base h-12 px-7" onClick={() => navTo('browse')}>
                 Browse items <ArrowRight size={16} />
               </Button>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto text-base h-12 px-7" onClick={() => setPage('upload')}>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto text-base h-12 px-7" onClick={() => navTo('upload')}>
                 List an item
               </Button>
             </div>
@@ -318,6 +369,7 @@ export default function App() {
                   tag={item.condition} likeCount={item.likeCount}
                   saved={item.saved} offerCount={item.offerCount}
                   image={item.images?.[0]}
+                  onSave={() => toggleSave(item)}
                 />
               </div>
             ))}
@@ -344,7 +396,7 @@ export default function App() {
             <h2 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">Listed in Abuja</h2>
             <p className="text-xs text-zinc-400 mt-0.5 font-medium">Abuja · Updated today</p>
           </div>
-          <Button variant="ghost" size="sm" className="text-zinc-500 gap-1 -mr-2" onClick={() => setPage('browse')}>
+          <Button variant="ghost" size="sm" className="text-zinc-500 gap-1 -mr-2" onClick={() => navTo('browse')}>
             See all <ArrowRight size={13} />
           </Button>
         </div>
@@ -354,7 +406,7 @@ export default function App() {
           style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
           {activeListings.map(item => (
             <div key={item.id} className="w-44 shrink-0 cursor-pointer" style={{ scrollSnapAlign: 'start' }} onClick={() => openItem(item)}>
-              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} saved={item.saved} offerCount={item.offerCount} image={item.images?.[0]} />
+              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} saved={item.saved} offerCount={item.offerCount} image={item.images?.[0]} onSave={() => toggleSave(item)} />
             </div>
           ))}
           <div className="w-5 shrink-0" />
@@ -364,7 +416,7 @@ export default function App() {
         <div className="hidden md:grid md:grid-cols-4 gap-6 px-8">
           {activeListings.map(item => (
             <div key={item.id} className="cursor-pointer" onClick={() => openItem(item)}>
-              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} saved={item.saved} offerCount={item.offerCount} image={item.images?.[0]} />
+              <ListCard title={item.title} meta={`${fmt(item.price)} · Abuja`} tag={item.condition} likeCount={item.likeCount} saved={item.saved} offerCount={item.offerCount} image={item.images?.[0]} onSave={() => toggleSave(item)} />
             </div>
           ))}
         </div>
@@ -378,7 +430,7 @@ export default function App() {
             <h2 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">Recently sold</h2>
             <p className="text-xs text-zinc-400 mt-0.5 font-medium">Sold in the last 7 days</p>
           </div>
-          <Button variant="ghost" size="sm" className="text-zinc-500 gap-1 -mr-2" onClick={() => setPage('browse')}>
+          <Button variant="ghost" size="sm" className="text-zinc-500 gap-1 -mr-2" onClick={() => navTo('browse')}>
             See all <ArrowRight size={13} />
           </Button>
         </div>
@@ -517,12 +569,12 @@ export default function App() {
             Free to list. 5% on sale. Buyer comes to you — you just get paid.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button size="lg" className="bg-white text-zinc-900 hover:bg-zinc-100 w-full sm:w-auto h-12 px-7 text-base gap-2" onClick={() => setPage('upload')}>
+            <Button size="lg" className="bg-white text-zinc-900 hover:bg-zinc-100 w-full sm:w-auto h-12 px-7 text-base gap-2" onClick={() => navTo('upload')}>
               List your first item <ArrowRight size={16} />
             </Button>
             <Button size="lg" variant="outline"
               className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-600 w-full sm:w-auto h-12 px-7 text-base"
-              onClick={() => setPage('browse')}>
+              onClick={() => navTo('browse')}>
               Browse items
             </Button>
           </div>
@@ -550,7 +602,7 @@ export default function App() {
                     }[l]
                     return (
                       <li key={l}>
-                        <button onClick={() => route && setPage(route)}
+                        <button onClick={() => route && navTo(route)}
                           className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors bg-transparent border-none cursor-pointer p-0 text-left">{l}</button>
                       </li>
                     )

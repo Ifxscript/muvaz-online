@@ -1,6 +1,6 @@
 import { MHeart, MChevRight, mFont, mText, mSubtext, mMuted, mBorder, mWhite, mAccent } from './ui.jsx';
 
-export default function ListCard({ title, meta, tag, likeCount, saved, sold, offerCount, paused, hideSave, image, onClick, style, imageRatio = '68%' }) {
+export default function ListCard({ title, meta, tag, likeCount, saved, sold, offerCount, paused, hideSave, image, onSave, onClick, style, imageRatio = '68%' }) {
   const Wrapper = onClick ? 'button' : 'div';
   const wrapperStyle = {
     display: 'flex', flexDirection: 'column', gap: 0,
@@ -35,7 +35,9 @@ export default function ListCard({ title, meta, tag, likeCount, saved, sold, off
           </div>
         )}
         {!hideSave && (
-          <button style={{ position: 'absolute', top: 10, right: 10, width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)', zIndex: 2 }}>
+          <button
+            onClick={onSave ? (e) => { e.stopPropagation(); onSave() } : undefined}
+            style={{ position: 'absolute', top: 10, right: 10, width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)', zIndex: 2 }}>
             <MHeart size={16} stroke={saved ? mText : mMuted} fill={saved ? mText : 'none'} sw={2} />
           </button>
         )}

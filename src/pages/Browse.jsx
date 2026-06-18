@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { ArrowLeft, Search, X, SlidersHorizontal, LayoutGrid, AlignJustify, Check, Star } from 'lucide-react'
 import { Button } from '../components/ui/button.jsx'
 import { Badge } from '../components/ui/badge.jsx'
@@ -70,7 +70,7 @@ function Sheet({ open, onClose, title, children }) {
 
 // ── Browse page ───────────────────────────────────────────────────────────────
 
-export default function Browse({ onBack }) {
+export default function Browse({ onBack, requireAuth }) {
   const [query,       setQuery]       = useState('')
   const [cat,         setCat]         = useState('All')
   const [sort,        setSort]        = useState('Nearest')
@@ -85,6 +85,7 @@ export default function Browse({ onBack }) {
   const [items,        setItems]        = useState([])
   const [loading,      setLoading]      = useState(true)
   const [fetchError,   setFetchError]   = useState(null)
+  const listScrollRef = useRef(0)
 
   useEffect(() => {
     listingsApi.getAll()
@@ -93,8 +94,29 @@ export default function Browse({ onBack }) {
       .finally(() => setLoading(false))
   }, [])
 
+  // Open item: remember where we were in the list. Close: restore that spot.
+  const openItem  = item => { listScrollRef.current = window.scrollY; setSelectedItem(item) }
+  const closeItem = ()   => setSelectedItem(null)
+
+  // Toggle save/like (requires auth). Updates the list from the API response.
+  const toggleSave = item => {
+    const run = async () => {
+      try {
+        const updated = normalizeListing(await listingsApi.toggleSave(item.id))
+        setItems(prev => prev.map(x => x.id === updated.id
+          ? { ...x, saved: updated.saved, likeCount: updated.likeCount }
+          : x))
+      } catch { /* ignore */ }
+    }
+    requireAuth ? requireAuth(run) : run()
+  }
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, selectedItem ? 0 : listScrollRef.current)
+  }, [selectedItem])
+
   if (selectedItem) {
-    return <ItemPage item={selectedItem} allItems={items} onBack={() => setSelectedItem(null)} onSelectItem={setSelectedItem} />
+    return <ItemPage item={selectedItem} allItems={items} onBack={closeItem} onSelectItem={openItem} requireAuth={requireAuth} />
   }
 
   const activeFilters = (region !== 'All' ? 1 : 0) + (cond !== 'All' ? 1 : 0) + (sort !== 'Nearest' ? 1 : 0)
@@ -279,7 +301,7 @@ export default function Browse({ onBack }) {
             {filtered.length > 0 && grid === 2 && (
               <div className="columns-2 md:columns-3 lg:columns-4 gap-3">
                 {filtered.map((item, i) => (
-                  <div key={item.id} className="break-inside-avoid mb-3 cursor-pointer" onClick={() => setSelectedItem(item)}>
+                  <div key={item.id} className="break-inside-avoid mb-3 cursor-pointer" onClick={() => openItem(item)}>
                     <ListCard
                       title={item.title}
                       meta={item.region ? `₦${item.price} · ${item.region}` : `₦${item.price}`}
@@ -287,8 +309,11 @@ export default function Browse({ onBack }) {
                       rating={item.rating}
                       reviews={item.reviews}
                       saved={item.saved}
+                      likeCount={item.likeCount}
+                      offerCount={item.offerCount}
                       image={item.images?.[0]}
                       imageRatio={imageRatio(i)}
+                      onSave={() => toggleSave(item)}
                     />
                   </div>
                 ))}
@@ -299,8 +324,12 @@ export default function Browse({ onBack }) {
             {filtered.length > 0 && grid === 1 && (
               <div className="flex flex-col divide-y divide-zinc-100">
                 {filtered.map(item => (
-                  <div key={item.id} className="flex gap-3 py-3.5 cursor-pointer" onClick={() => setSelectedItem(item)}>
-                    <div className="w-20 h-16 md:w-24 md:h-20 rounded-xl bg-gradient-to-br from-zinc-200 to-zinc-300 shrink-0" />
+                  <div key={item.id} className="flex gap-3 py-3.5 cursor-pointer" onClick={() => openItem(item)}>
+                    <div className="w-20 h-16 md:w-24 md:h-20 rounded-xl bg-gradient-to-br from-zinc-200 to-zinc-300 shrink-0 overflow-hidden">
+                      {item.images?.[0] && (
+                        <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" />
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div>
                         <div className="flex items-start justify-between gap-2">
