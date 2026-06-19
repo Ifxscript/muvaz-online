@@ -9,12 +9,7 @@ import {
   mAccent, mAccentBg, mRadius, mRadiusSm, mRadiusLg, mShadowMd, mWhite,
 } from '../components/ui.jsx'
 
-const THUMB_GRADS = [
-  'linear-gradient(135deg,#d4d4d8 0%,#c4c4c8 100%)',
-  'linear-gradient(135deg,#c8c8cc 0%,#b8b8bc 100%)',
-  'linear-gradient(135deg,#dcdce0 0%,#cccccc 100%)',
-  'linear-gradient(135deg,#e4e4e8 0%,#d4d4d8 100%)',
-]
+const PLACEHOLDER_GRAD = 'linear-gradient(135deg,#d4d4d8 0%,#c4c4c8 100%)'
 
 const STATUS_LABEL = { ACTIVE: 'Active', PAUSED: 'Paused', PENDING_APPROVAL: 'Pending', REJECTED: 'Rejected', SOLD: 'Sold' }
 
@@ -50,6 +45,7 @@ function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
   const [activeThumb,   setActiveThumb]   = useState(0)
   const [deleteOpen,    setDeleteOpen]    = useState(false)
   const [toast,         setToast]         = useState(null)
+  const images = advert.images?.length ? advert.images : []
 
   // Fetch offers for this listing on mount
   useEffect(() => {
@@ -101,8 +97,12 @@ function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
 
       {/* ── Main image with floating back + status ── */}
       <div className="relative">
-        <div className="w-full aspect-square transition-all duration-300"
-          style={{ background: THUMB_GRADS[activeThumb] }} />
+        <div className="w-full aspect-square overflow-hidden transition-all duration-300"
+          style={{ background: PLACEHOLDER_GRAD }}>
+          {images[activeThumb] && (
+            <img src={images[activeThumb]} alt={advert.title} className="w-full h-full object-cover" />
+          )}
+        </div>
 
         {/* Floating back button */}
         <button onClick={onBack}
@@ -125,19 +125,23 @@ function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
         </button>
       </div>
 
-      {/* ── Thumbnail strip ── */}
-      <div className="scroll-row flex gap-2 overflow-x-auto px-4 py-3 scroll-pl-4 border-b border-zinc-100">
-        {THUMB_GRADS.map((g, i) => (
-          <div key={i} onClick={() => setActiveThumb(i)}
-            className="shrink-0 w-14 h-12 rounded-lg cursor-pointer"
-            style={{
-              background: g,
-              border: i === activeThumb ? '2px solid #18181b' : '1.5px solid #e4e4e7',
-              transition: 'border .15s',
-            }} />
-        ))}
-        <div className="w-4 shrink-0" />
-      </div>
+      {/* ── Thumbnail strip — only if multiple images ── */}
+      {images.length > 1 && (
+        <div className="scroll-row flex gap-2 overflow-x-auto px-4 py-3 scroll-pl-4 border-b border-zinc-100">
+          {images.map((url, i) => (
+            <div key={i} onClick={() => setActiveThumb(i)}
+              className="shrink-0 w-14 h-12 rounded-lg cursor-pointer overflow-hidden"
+              style={{
+                background: PLACEHOLDER_GRAD,
+                border: i === activeThumb ? '2px solid #18181b' : '1.5px solid #e4e4e7',
+                transition: 'border .15s',
+              }}>
+              <img src={url} alt="" className="w-full h-full object-cover" />
+            </div>
+          ))}
+          <div className="w-4 shrink-0" />
+        </div>
+      )}
 
       {/* ── Item details ── */}
       <div className="px-5 pt-6 pb-4">
@@ -300,6 +304,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
   const [selectedAdvert, setSelectedAdvert] = useState(null)
   const [adverts,        setAdverts]        = useState([])
   const [sold,           setSold]           = useState([])
+  const [savedListings,  setSavedListings]  = useState([])
   const [placedOffers,   setPlacedOffers]   = useState([])
   const [loading,        setLoading]        = useState(true)
 
@@ -307,13 +312,22 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
     Promise.all([
       listingsApi.mine().catch(() => []),
       offersApi.mine().catch(() => []),
-    ]).then(([listings, myOffers]) => {
+      listingsApi.saved().catch(() => []),
+    ]).then(([listings, myOffers, saved]) => {
       const all = Array.isArray(listings) ? listings.map(normalizeListing) : []
       setAdverts(all.filter(l => l.status !== 'SOLD'))
       setSold(all.filter(l => l.status === 'SOLD'))
       setPlacedOffers(Array.isArray(myOffers) ? myOffers.map(normalizeOffer) : [])
+      setSavedListings(Array.isArray(saved) ? saved.map(normalizeListing) : [])
     }).finally(() => setLoading(false))
   }, [])
+
+  const handleUnsave = async (item) => {
+    try {
+      await listingsApi.toggleSave(item.id)
+      setSavedListings(prev => prev.filter(l => l.id !== item.id))
+    } catch { /* ignore */ }
+  }
 
   const handleDelete = id => setAdverts(prev => prev.filter(a => a.id !== id))
 
@@ -431,15 +445,44 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
 
         <MSeparator style={{ margin: '24px 0 0' }} />
 
-        {/* Saved — no backend endpoint yet */}
+        {/* Saved */}
         <section style={{ paddingTop: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 20px', marginBottom: 14 }}>
             <h2 style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText, margin: 0 }}>Saved</h2>
-            <span style={{ background: mMutedBg, color: mMuted, fontFamily: mFont, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>0</span>
+            <span style={{
+              background: savedListings.length > 0 ? mText : mMutedBg,
+              color: savedListings.length > 0 ? '#fff' : mMuted,
+              fontFamily: mFont, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
+            }}>{loading ? '—' : savedListings.length}</span>
           </div>
-          <div style={{ margin: '0 20px', padding: '28px 20px', textAlign: 'center', borderRadius: mRadiusLg, border: `1.5px dashed ${mBorder}`, background: mMutedBg }}>
-            <p style={{ fontFamily: mFont, fontSize: 14, color: mMuted, margin: 0 }}>Nothing saved yet.</p>
-          </div>
+          {loading ? (
+            <div style={{ padding: '32px 20px', textAlign: 'center' }}>
+              <div style={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${mBorder}`, borderTopColor: mText, animation: 'spin 0.7s linear infinite', margin: '0 auto' }} />
+            </div>
+          ) : savedListings.length === 0 ? (
+            <div style={{ margin: '0 20px', padding: '28px 20px', textAlign: 'center', borderRadius: mRadiusLg, border: `1.5px dashed ${mBorder}`, background: mMutedBg }}>
+              <p style={{ fontFamily: mFont, fontSize: 14, fontWeight: 500, color: mMuted, margin: '0 0 4px' }}>Nothing saved yet.</p>
+              <p style={{ fontFamily: mFont, fontSize: 13, color: '#a1a1aa', margin: 0 }}>Tap the ♥ on any listing to save it here.</p>
+            </div>
+          ) : (
+            <div className="scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+              {savedListings.map(item => (
+                <div key={item.id} style={{ width: 160, flexShrink: 0, scrollSnapAlign: 'start' }}>
+                  <ListCard
+                    title={item.title}
+                    meta={`₦${Number(item.price).toLocaleString('en-NG')}`}
+                    tag={CONDITION_LABEL[item.condition] ?? item.condition}
+                    image={item.images?.[0]}
+                    saved
+                    likeCount={item.likeCount}
+                    offerCount={item.offerCount}
+                    onSave={() => handleUnsave(item)}
+                  />
+                </div>
+              ))}
+              <div style={{ minWidth: 20, flexShrink: 0 }} />
+            </div>
+          )}
         </section>
 
         <MSeparator style={{ margin: '24px 0 0' }} />

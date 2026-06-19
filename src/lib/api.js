@@ -70,6 +70,7 @@ export const listingsApi = {
   togglePause:  id     => api.patch(`/listings/${id}/pause`),
   toggleSave:   id     => api.post(`/listings/${id}/save`),
   mine:         ()     => api.get('/me/listings'),
+  saved:        ()     => api.get('/me/saved'),
   uploadImage:  file   => {
     const fd = new FormData()
     fd.append('file', file)
