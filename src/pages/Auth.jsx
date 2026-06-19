@@ -59,6 +59,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
   const handleSignUp = async () => {
     if (!name || !email || !password || !phone) { setError('Please fill in all fields.'); return }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
+    if (phone.length < 7) { setError('Enter a valid WhatsApp number.'); return }
     setLoading(true); setError('')
     try {
       const data = await authApi.register({ name, email, password, phone: fullPhone() })
@@ -80,7 +81,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
   // ── Complete profile (Google users) ───────────────────────────────────────
 
   const handleCompleteProfile = async () => {
-    if (!phone) { setError('Please enter your WhatsApp number.'); return }
+    if (phone.length < 7) { setError('Enter a valid WhatsApp number.'); return }
     setLoading(true); setError('')
     try {
       const data = await authApi.completeProfile({ phone: fullPhone(), name: googleUser?.name ?? name })
@@ -118,10 +119,12 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
     return (
       <div className="min-h-screen bg-white font-sans flex flex-col">
         <div className="px-5 pt-5">
-          <button onClick={() => setStep('form')}
-            className="flex items-center justify-center w-9 h-9 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors mb-8">
-            <ArrowLeft size={18} className="text-zinc-700" />
-          </button>
+          {onBack && (
+            <button onClick={() => setStep('form')}
+              className="flex items-center justify-center w-9 h-9 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors mb-8">
+              <ArrowLeft size={18} className="text-zinc-700" />
+            </button>
+          )}
         </div>
 
         <div className="flex-1 px-5 max-w-sm mx-auto w-full">
@@ -150,11 +153,8 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
           {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
 
           <div className="flex flex-col gap-3 mt-8">
-            <Button className="w-full h-12 text-base" disabled={loading || !phone} onClick={handleCompleteProfile}>
+            <Button className="w-full h-12 text-base" disabled={loading || phone.length < 7} onClick={handleCompleteProfile}>
               {loading ? 'Saving…' : 'Continue'}
-            </Button>
-            <Button variant="ghost" className="w-full h-11 text-zinc-400" onClick={() => onSuccess(googleUser)}>
-              Skip for now
             </Button>
           </div>
         </div>
@@ -360,7 +360,7 @@ function PhoneInput({ country, setCountry, phone, setPhone }) {
         ))}
       </select>
       <div className="flex-1 flex items-center h-12 px-3 rounded-md border border-zinc-200 focus-within:border-zinc-900 transition-colors">
-        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+        <input type="tel" value={phone} onChange={e => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
           placeholder="803 123 4567"
           className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400" />
       </div>

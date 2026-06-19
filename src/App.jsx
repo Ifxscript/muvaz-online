@@ -226,6 +226,14 @@ export default function App() {
     </div>
   )
 
+  // ── Force profile completion (WhatsApp) before the app is usable ────────────
+  // A logged-in user without a completed profile (e.g. fresh Google sign-in) must
+  // add their WhatsApp number first — there is no way around this screen.
+  if (currentUser && !currentUser.profileComplete) return <Auth
+    pendingGoogleUser={currentUser}
+    onSuccess={user => { setCurrentUser(user); setPendingGoogleUser(null); historyRef.current = []; setPage('home') }}
+  />
+
   if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} />
   if (page === 'auth')    return <Auth
     onBack={navBack}
