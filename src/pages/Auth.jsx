@@ -19,7 +19,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser }) {
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [phone,    setPhone]    = useState('')
-  const [country,  setCountry]  = useState('+49')
+  const [country,  setCountry]  = useState('+234')
 
   // google user stored after oauth callback
   const [googleUser, setGoogleUser] = useState(null)
@@ -139,8 +139,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser }) {
 
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight mb-2">One last step</h1>
           <p className="text-sm text-zinc-500 leading-relaxed mb-8">
-            Add your WhatsApp number — this is how we coordinate pickup and delivery.{' '}
-            <span className="text-zinc-400">Never shared with buyers or sellers.</span>
+            Enter your current WhatsApp number — this is how we communicate with you.
           </p>
 
           <label className="block text-sm font-semibold text-zinc-900 mb-2">WhatsApp number</label>
@@ -243,7 +242,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser }) {
               <label className="block text-sm font-semibold text-zinc-900 mb-2">WhatsApp number</label>
               <PhoneInput country={country} setCountry={setCountry} phone={phone} setPhone={setPhone} />
               <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
-                How we coordinate pickup and delivery — never shared with buyers or sellers.
+                Enter your current WhatsApp number — this is how we communicate with you.
               </p>
             </div>
 
@@ -328,10 +327,10 @@ function GoogleButton({ onClick, label }) {
 }
 
 const COUNTRY_CODES = [
-  { flag: '🇩🇪', code: '+49' },
-  { flag: '🇬🇧', code: '+44' },
   { flag: '🇳🇬', code: '+234' },
+  { flag: '🇬🇧', code: '+44' },
   { flag: '🇺🇸', code: '+1' },
+  { flag: '🇩🇪', code: '+49' },
   { flag: '🇫🇷', code: '+33' },
 ]
 
@@ -346,7 +345,7 @@ function PhoneInput({ country, setCountry, phone, setPhone }) {
       </select>
       <div className="flex-1 flex items-center h-12 px-3 rounded-md border border-zinc-200 focus-within:border-zinc-900 transition-colors">
         <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-          placeholder="123 456 7890"
+          placeholder="803 123 4567"
           className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400" />
       </div>
     </div>
