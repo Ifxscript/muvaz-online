@@ -7,8 +7,9 @@ import { authApi, setToken } from '../lib/api.js'
 
 const OAUTH_URL = `${import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '')}/oauth2/authorization/google`
 
-export default function Auth({ onBack, onSuccess, pendingGoogleUser }) {
+export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNotice }) {
   const [tab,      setTab]      = useState('signin')
+  const [notice,   setNotice]   = useState(verifiedNotice ?? null)
   const [step,     setStep]     = useState('form')   // 'form' | 'verify-email' | 'phone'
   const [showPass, setShowPass] = useState(false)
   const [loading,  setLoading]  = useState(false)
@@ -32,7 +33,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser }) {
     }
   }, [pendingGoogleUser])
 
-  const switchTab = t => { setTab(t); setStep('form'); setError('') }
+  const switchTab = t => { setTab(t); setStep('form'); setError(''); setNotice(null) }
   const fullPhone = () => `${country}${phone.replace(/^0/, '')}`
 
   // ── Sign in ───────────────────────────────────────────────────────────────
@@ -61,11 +62,12 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser }) {
     setLoading(true); setError('')
     try {
       const data = await authApi.register({ name, email, password, phone: fullPhone() })
-      setToken(data.token)
-      if (data.user.emailVerified) {
-        // Auto-verified (Gmail not configured) — go straight in
+      if (data.token) {
+        // Verification disabled — backend auto-verified and issued a token
+        setToken(data.token)
         onSuccess(data.user)
       } else {
+        // Verification required — NO token issued. User must verify via email, then sign in.
         setStep('verify-email')
       }
     } catch (e) {
@@ -102,8 +104,8 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser }) {
         <p className="text-sm text-zinc-500 leading-relaxed mb-1 max-w-xs">
           We sent a verification link to <strong className="text-zinc-900">{email}</strong>.
         </p>
-        <p className="text-xs text-zinc-400 mb-8">Click the link to activate your account — it may take a minute.</p>
-        <Button variant="outline" className="w-full max-w-xs h-12" onClick={() => setStep('form')}>
+        <p className="text-xs text-zinc-400 mb-8">Click the link to activate your account, then sign in. It may take a minute to arrive.</p>
+        <Button variant="outline" className="w-full max-w-xs h-12" onClick={() => switchTab('signin')}>
           Back to sign in
         </Button>
       </div>
@@ -177,6 +179,20 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser }) {
         <p className="text-2xl font-black tracking-tight text-zinc-900 mb-8 select-none">
           muvaz<span className="text-zinc-300">.</span>
         </p>
+
+        {/* Email-verification result banner */}
+        {notice === 'success' && (
+          <div className="mb-6 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+            <p className="text-sm font-semibold text-zinc-900">Email verified ✓</p>
+            <p className="text-xs text-zinc-500 mt-0.5">You can now sign in to your account.</p>
+          </div>
+        )}
+        {notice === 'error' && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm font-semibold text-red-700">Verification link invalid or expired</p>
+            <p className="text-xs text-red-500 mt-0.5">Try signing in — if it still fails, register again.</p>
+          </div>
+        )}
 
         {/* Tab toggle */}
         <div className="flex bg-zinc-100 rounded-full p-1 mb-8">

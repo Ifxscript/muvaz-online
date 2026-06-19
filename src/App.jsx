@@ -72,6 +72,7 @@ export default function App() {
   const [pendingGoogleUser, setPendingGoogleUser] = useState(null)
   const [activeListings, setActiveListings] = useState([])
   const [soldListings,   setSoldListings]   = useState([])
+  const [verifiedNotice, setVerifiedNotice] = useState(null)   // 'success' | 'error' | null
 
   // ── On mount: restore session + handle OAuth callback ───────────────────────
   useEffect(() => {
@@ -80,6 +81,16 @@ export default function App() {
     const oauthToken = params.get('token')
 
     const init = async () => {
+      // Email verification redirect from the backend link
+      const verified = params.get('verified')
+      if (verified) {
+        window.history.replaceState({}, '', '/')
+        setVerifiedNotice(verified === '1' ? 'success' : 'error')
+        setPage('auth')
+        setAuthLoading(false)
+        return
+      }
+
       // OAuth failure redirect — show auth page with error
       if (params.get('error')) {
         window.history.replaceState({}, '', '/')
@@ -219,6 +230,7 @@ export default function App() {
   if (page === 'auth')    return <Auth
     onBack={navBack}
     pendingGoogleUser={pendingGoogleUser}
+    verifiedNotice={verifiedNotice}
     onSuccess={user => { localStorage.setItem('muvaz_visited', '1'); setCurrentUser(user); setPendingGoogleUser(null); historyRef.current = []; setPage('home') }}
   />
   if (page === 'upload')  return currentUser
