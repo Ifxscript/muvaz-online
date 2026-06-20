@@ -73,6 +73,7 @@ export default function App() {
   const [activeListings, setActiveListings] = useState([])
   const [soldListings,   setSoldListings]   = useState([])
   const [verifiedNotice, setVerifiedNotice] = useState(null)   // 'success' | 'error' | null
+  const [manageAdvert,   setManageAdvert]   = useState(null)   // seller's own listing to open in Profile
 
   // ── On mount: restore session + handle OAuth callback ───────────────────────
   useEffect(() => {
@@ -197,7 +198,14 @@ export default function App() {
     }
   }, [page, selectedItem, editItem])
 
-  const openItem = item => navTo('item', { item })
+  // Seller opening the offers view for their own listing → jump to Profile's advert page
+  const manageListing = item => { setManageAdvert(item); navTo('profile') }
+
+  // Tapping a listing: own item → go straight to its offers page; otherwise open the item
+  const openItem = item => {
+    if (currentUser && item.ownerId && item.ownerId === currentUser.id) { manageListing(item); return }
+    navTo('item', { item })
+  }
   const closeItem = () => navBack()
 
   // Toggle save/like on a listing (requires auth). Updates both lists from the API response.
@@ -234,7 +242,7 @@ export default function App() {
     onSuccess={user => { setCurrentUser(user); setPendingGoogleUser(null); historyRef.current = []; setPage('home') }}
   />
 
-  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} />
+  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} currentUser={currentUser} onManageListing={manageListing} />
   if (page === 'auth')    return <Auth
     onBack={navBack}
     pendingGoogleUser={pendingGoogleUser}
@@ -245,7 +253,7 @@ export default function App() {
     ? <Upload onBack={navBack} />
     : (() => { setPage('auth'); return null })()
   if (page === 'profile') return currentUser
-    ? <Profile currentUser={currentUser} onNavigate={p => navTo(p)} onSignOut={handleSignOut} onEdit={item => navTo('edit', { editItem: item })} />
+    ? <Profile currentUser={currentUser} onNavigate={p => navTo(p)} onSignOut={handleSignOut} onEdit={item => navTo('edit', { editItem: item })} initialAdvert={manageAdvert} onConsumeInitialAdvert={() => setManageAdvert(null)} />
     : (() => { setPage('auth'); return null })()
   if (page === 'edit') return currentUser
     ? <Upload initialItem={editItem} onBack={navBack} onSuccess={navBack} />

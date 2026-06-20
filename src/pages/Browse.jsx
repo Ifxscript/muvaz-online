@@ -70,7 +70,7 @@ function Sheet({ open, onClose, title, children }) {
 
 // ── Browse page ───────────────────────────────────────────────────────────────
 
-export default function Browse({ onBack, requireAuth }) {
+export default function Browse({ onBack, requireAuth, currentUser, onManageListing }) {
   const [query,       setQuery]       = useState('')
   const [cat,         setCat]         = useState('All')
   const [sort,        setSort]        = useState('Nearest')
@@ -94,9 +94,13 @@ export default function Browse({ onBack, requireAuth }) {
       .finally(() => setLoading(false))
   }, [])
 
-  // Open item: remember where we were in the list. Close: restore that spot.
-  const openItem  = item => { listScrollRef.current = window.scrollY; setSelectedItem(item) }
-  const closeItem = ()   => setSelectedItem(null)
+  // Open item: own listing → its offers page; otherwise open the item (remembering scroll).
+  const openItem = item => {
+    if (currentUser && item.ownerId && item.ownerId === currentUser.id) { onManageListing?.(item); return }
+    listScrollRef.current = window.scrollY
+    setSelectedItem(item)
+  }
+  const closeItem = () => setSelectedItem(null)
 
   // Toggle save/like (requires auth). Updates the list from the API response.
   const toggleSave = item => {
