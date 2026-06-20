@@ -38,7 +38,7 @@ function normalizeOffer(raw) {
 
 
 // ── Advert detail sub-page ────────────────────────────────────────────────────
-function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
+export function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
   const [advert,        setAdvert]        = useState(initial)
   const [offers,        setOffers]        = useState([])
   const [offersLoading, setOffersLoading] = useState(true)
@@ -300,8 +300,8 @@ function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
 }
 
 // ── Profile page ──────────────────────────────────────────────────────────────
-export default function Profile({ onNavigate, onEdit, onSignOut, currentUser, initialAdvert, onConsumeInitialAdvert }) {
-  const [selectedAdvert, setSelectedAdvert] = useState(initialAdvert ?? null)
+export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) {
+  const [selectedAdvert, setSelectedAdvert] = useState(null)
   const [adverts,        setAdverts]        = useState([])
   const [sold,           setSold]           = useState([])
   const [savedListings,  setSavedListings]  = useState([])
@@ -320,12 +320,6 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser, in
       setPlacedOffers(Array.isArray(myOffers) ? myOffers.map(normalizeOffer) : [])
       setSavedListings(Array.isArray(saved) ? saved.map(normalizeListing) : [])
     }).finally(() => setLoading(false))
-  }, [])
-
-  // initialAdvert was used to seed selectedAdvert on mount — clear it in the parent
-  // so navigating back to Profile later doesn't auto-reopen this advert.
-  useEffect(() => {
-    if (initialAdvert) onConsumeInitialAdvert?.()
   }, [])
 
   const handleUnsave = async (item) => {

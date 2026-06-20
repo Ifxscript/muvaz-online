@@ -4,7 +4,7 @@ import MobileDrawer from './components/MobileDrawer.jsx'
 import Browse from './pages/Browse.jsx'
 import Auth from './pages/Auth.jsx'
 import Upload from './pages/Upload.jsx'
-import Profile from './pages/Profile.jsx'
+import Profile, { MyAdvertPage } from './pages/Profile.jsx'
 import Help from './pages/Help.jsx'
 import NotFound from './pages/NotFound.jsx'
 import ItemPage from './pages/ItemPage.jsx'
@@ -73,7 +73,6 @@ export default function App() {
   const [activeListings, setActiveListings] = useState([])
   const [soldListings,   setSoldListings]   = useState([])
   const [verifiedNotice, setVerifiedNotice] = useState(null)   // 'success' | 'error' | null
-  const [manageAdvert,   setManageAdvert]   = useState(null)   // seller's own listing to open in Profile
 
   // ── On mount: restore session + handle OAuth callback ───────────────────────
   useEffect(() => {
@@ -198,8 +197,8 @@ export default function App() {
     }
   }, [page, selectedItem, editItem])
 
-  // Seller opening the offers view for their own listing → jump to Profile's advert page
-  const manageListing = item => { setManageAdvert(item); navTo('profile') }
+  // Seller opening the offers view for their own listing → push the advert page onto the stack
+  const manageListing = item => navTo('advert', { item })
 
   // Tapping a listing: own item → go straight to its offers page; otherwise open the item
   const openItem = item => {
@@ -242,7 +241,7 @@ export default function App() {
     onSuccess={user => { setCurrentUser(user); setPendingGoogleUser(null); historyRef.current = []; setPage('home') }}
   />
 
-  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} currentUser={currentUser} onManageListing={manageListing} />
+  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} currentUser={currentUser} onEdit={item => navTo('edit', { editItem: item })} />
   if (page === 'auth')    return <Auth
     onBack={navBack}
     pendingGoogleUser={pendingGoogleUser}
@@ -253,7 +252,10 @@ export default function App() {
     ? <Upload onBack={navBack} />
     : (() => { setPage('auth'); return null })()
   if (page === 'profile') return currentUser
-    ? <Profile currentUser={currentUser} onNavigate={p => navTo(p)} onSignOut={handleSignOut} onEdit={item => navTo('edit', { editItem: item })} initialAdvert={manageAdvert} onConsumeInitialAdvert={() => setManageAdvert(null)} />
+    ? <Profile currentUser={currentUser} onNavigate={p => navTo(p)} onSignOut={handleSignOut} onEdit={item => navTo('edit', { editItem: item })} />
+    : (() => { setPage('auth'); return null })()
+  if (page === 'advert') return currentUser
+    ? <MyAdvertPage advert={selectedItem} onBack={navBack} onDelete={() => {}} onEdit={item => navTo('edit', { editItem: item })} />
     : (() => { setPage('auth'); return null })()
   if (page === 'edit') return currentUser
     ? <Upload initialItem={editItem} onBack={navBack} onSuccess={navBack} />

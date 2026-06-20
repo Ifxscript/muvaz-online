@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/badge.jsx'
 import { Separator } from '../components/ui/separator.jsx'
 import ListCard from '../components/ListCard.jsx'
 import ItemPage from './ItemPage.jsx'
+import { MyAdvertPage } from './Profile.jsx'
 import { cn } from '../lib/utils.js'
 import { listingsApi, normalizeListing } from '../lib/api.js'
 import { CONDITION_LABEL } from '../lib/constants.js'
@@ -70,7 +71,7 @@ function Sheet({ open, onClose, title, children }) {
 
 // ── Browse page ───────────────────────────────────────────────────────────────
 
-export default function Browse({ onBack, requireAuth, currentUser, onManageListing }) {
+export default function Browse({ onBack, requireAuth, currentUser, onEdit }) {
   const [query,       setQuery]       = useState('')
   const [cat,         setCat]         = useState('All')
   const [sort,        setSort]        = useState('Nearest')
@@ -81,7 +82,8 @@ export default function Browse({ onBack, requireAuth, currentUser, onManageListi
   const [draftSort,    setDraftSort]    = useState('Nearest')
   const [region,       setRegion]       = useState('All')
   const [cond,         setCond]         = useState('All')
-  const [selectedItem, setSelectedItem] = useState(null)
+  const [selectedItem,   setSelectedItem]   = useState(null)
+  const [selectedAdvert, setSelectedAdvert] = useState(null)
   const [items,        setItems]        = useState([])
   const [loading,      setLoading]      = useState(true)
   const [fetchError,   setFetchError]   = useState(null)
@@ -94,10 +96,11 @@ export default function Browse({ onBack, requireAuth, currentUser, onManageListi
       .finally(() => setLoading(false))
   }, [])
 
-  // Open item: own listing → its offers page; otherwise open the item (remembering scroll).
+  // Open item: own listing → its offers page; otherwise the buyer item view.
+  // Either way remember scroll so closing restores the exact list position.
   const openItem = item => {
-    if (currentUser && item.ownerId && item.ownerId === currentUser.id) { onManageListing?.(item); return }
     listScrollRef.current = window.scrollY
+    if (currentUser && item.ownerId && item.ownerId === currentUser.id) { setSelectedAdvert(item); return }
     setSelectedItem(item)
   }
   const closeItem = () => setSelectedItem(null)
@@ -116,9 +119,12 @@ export default function Browse({ onBack, requireAuth, currentUser, onManageListi
   }
 
   useLayoutEffect(() => {
-    window.scrollTo(0, selectedItem ? 0 : listScrollRef.current)
-  }, [selectedItem])
+    window.scrollTo(0, (selectedItem || selectedAdvert) ? 0 : listScrollRef.current)
+  }, [selectedItem, selectedAdvert])
 
+  if (selectedAdvert) {
+    return <MyAdvertPage advert={selectedAdvert} onBack={() => setSelectedAdvert(null)} onDelete={() => setSelectedAdvert(null)} onEdit={onEdit} />
+  }
   if (selectedItem) {
     return <ItemPage item={selectedItem} allItems={items} onBack={closeItem} onSelectItem={openItem} requireAuth={requireAuth} />
   }
