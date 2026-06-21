@@ -71,9 +71,9 @@ function Sheet({ open, onClose, title, children }) {
 
 // ── Browse page ───────────────────────────────────────────────────────────────
 
-export default function Browse({ onBack, requireAuth, currentUser, onEdit, initialQuery = '', initialSort = null, onConsumeInitial }) {
+export default function Browse({ onBack, requireAuth, currentUser, onEdit, initialQuery = '', initialSort = null, initialCat = 'All', onConsumeInitial }) {
   const [query,       setQuery]       = useState(initialQuery)
-  const [cat,         setCat]         = useState('All')
+  const [cat,         setCat]         = useState(initialCat)
   const [sort,        setSort]        = useState(initialSort ?? 'Nearest')
   const [grid,        setGrid]        = useState(2)
   const [filterOpen,  setFilterOpen]  = useState(false)

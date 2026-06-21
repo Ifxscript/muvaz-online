@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import { Menu, ArrowRight, Package, Search, CreditCard, Star, ChevronDown, Plus, TrendingUp, Play } from 'lucide-react'
+import { Menu, ArrowRight, Package, Search, CreditCard, Star, ChevronDown, Plus,
+         Monitor, Car, Shirt, Armchair, Sofa, UtensilsCrossed, Dumbbell, BookOpen } from 'lucide-react'
 import MobileDrawer from './components/MobileDrawer.jsx'
 import Browse from './pages/Browse.jsx'
 import Auth from './pages/Auth.jsx'
@@ -42,6 +43,18 @@ const STEPS = [
 
 const NAV_LINKS = ['Browse', 'How it works', 'Pricing', 'About']
 
+// Top-categories grid — labels map to real backend category strings so each tile filters Browse
+const CATEGORY_TILES = [
+  { label: 'Electronics', cat: 'Electronics',      Icon: Monitor },
+  { label: 'Vehicles',    cat: 'Cars & Vehicles',  Icon: Car },
+  { label: 'Fashion',     cat: 'Clothing & Shoes', Icon: Shirt },
+  { label: 'Furniture',   cat: 'Furniture',        Icon: Armchair },
+  { label: 'Home',        cat: 'Home Décor',       Icon: Sofa },
+  { label: 'Kitchen',     cat: 'Kitchen',          Icon: UtensilsCrossed },
+  { label: 'Sports',      cat: 'Sports & Fitness', Icon: Dumbbell },
+  { label: 'Books',       cat: 'Books & Media',    Icon: BookOpen },
+]
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function Stars({ size = 13 }) {
@@ -76,6 +89,7 @@ export default function App() {
   const [heroQuery,      setHeroQuery]      = useState('')      // search box on the home hero
   const [browseQuery,    setBrowseQuery]    = useState('')      // seed query passed into Browse
   const [browseSort,     setBrowseSort]     = useState(null)    // seed sort passed into Browse
+  const [browseCat,      setBrowseCat]      = useState('All')   // seed category passed into Browse
 
   // ── On mount: restore session + handle OAuth callback ───────────────────────
   useEffect(() => {
@@ -201,9 +215,10 @@ export default function App() {
   }, [page, selectedItem, editItem])
 
   // Open Browse, optionally seeded with a search query and/or sort (cleared after Browse reads them)
-  const goBrowse = ({ query = '', sort = null } = {}) => {
+  const goBrowse = ({ query = '', sort = null, cat = 'All' } = {}) => {
     setBrowseQuery(query)
     setBrowseSort(sort)
+    setBrowseCat(cat)
     navTo('browse')
   }
 
@@ -251,7 +266,7 @@ export default function App() {
     onSuccess={user => { setCurrentUser(user); setPendingGoogleUser(null); historyRef.current = []; setPage('home') }}
   />
 
-  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} currentUser={currentUser} onEdit={item => navTo('edit', { editItem: item })} initialQuery={browseQuery} initialSort={browseSort} onConsumeInitial={() => { setBrowseQuery(''); setBrowseSort(null) }} />
+  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} currentUser={currentUser} onEdit={item => navTo('edit', { editItem: item })} initialQuery={browseQuery} initialSort={browseSort} initialCat={browseCat} onConsumeInitial={() => { setBrowseQuery(''); setBrowseSort(null); setBrowseCat('All') }} />
   if (page === 'auth')    return <Auth
     onBack={navBack}
     pendingGoogleUser={pendingGoogleUser}
@@ -383,16 +398,36 @@ export default function App() {
           </button>
           <button
             onClick={() => goBrowse({ sort: 'Trending' })}
-            className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
+            className="shrink-0 h-9 px-4 rounded-full bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
           >
-            <TrendingUp size={14} /> Trending
+            Trending
           </button>
           <button
             onClick={() => navTo('help')}
-            className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
+            className="shrink-0 h-9 px-4 rounded-full bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
           >
-            <Play size={12} fill="currentColor" /> How to sell
+            How to sell
           </button>
+        </div>
+      </section>
+
+      {/* ── Top categories ── */}
+      <section className="px-5 pb-8 md:px-8 max-w-screen-md mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold tracking-tight text-zinc-900">Top categories</h2>
+          <button onClick={() => goBrowse({})} className="text-sm font-semibold text-zinc-900 underline underline-offset-2">
+            See all
+          </button>
+        </div>
+        <div className="grid grid-cols-4 gap-x-3 gap-y-4">
+          {CATEGORY_TILES.map(({ label, cat, Icon }) => (
+            <button key={label} onClick={() => goBrowse({ cat })} className="flex flex-col items-center gap-2 group">
+              <span className="w-full aspect-square rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center group-hover:border-zinc-300 transition-colors">
+                <Icon size={22} className="text-zinc-800" strokeWidth={1.75} />
+              </span>
+              <span className="text-[12px] font-medium text-zinc-700">{label}</span>
+            </button>
+          ))}
         </div>
       </section>
 
