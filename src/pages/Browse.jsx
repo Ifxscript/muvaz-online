@@ -13,7 +13,7 @@ import { CONDITION_LABEL } from '../lib/constants.js'
 const CATS    = ['All', 'Furniture', 'Electronics', 'Clothing', 'Sports', 'Kitchen', 'Other']
 const REGIONS = ['All', 'Kreuzberg', 'Neukölln', 'Mitte', 'Prenzlauer Berg', 'Charlottenburg', 'Schöneberg', 'Friedrichshain']
 const CONDS   = ['All', 'LIKE_NEW', 'GREAT', 'GOOD', 'FAIR']
-const SORTS   = ['Nearest', 'Lowest price', 'Highest price', 'Newest']
+const SORTS   = ['Nearest', 'Trending', 'Lowest price', 'Highest price', 'Newest']
 
 function imageRatio(index) {
   const r = index % 3
@@ -71,10 +71,10 @@ function Sheet({ open, onClose, title, children }) {
 
 // ── Browse page ───────────────────────────────────────────────────────────────
 
-export default function Browse({ onBack, requireAuth, currentUser, onEdit }) {
-  const [query,       setQuery]       = useState('')
+export default function Browse({ onBack, requireAuth, currentUser, onEdit, initialQuery = '', initialSort = null, onConsumeInitial }) {
+  const [query,       setQuery]       = useState(initialQuery)
   const [cat,         setCat]         = useState('All')
-  const [sort,        setSort]        = useState('Nearest')
+  const [sort,        setSort]        = useState(initialSort ?? 'Nearest')
   const [grid,        setGrid]        = useState(2)
   const [filterOpen,  setFilterOpen]  = useState(false)
   const [draftRegion, setDraftRegion] = useState('All')
@@ -95,6 +95,10 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit }) {
       .catch(e => setFetchError(e.message))
       .finally(() => setLoading(false))
   }, [])
+
+  // initialQuery/initialSort seeded our state on mount — clear them in the parent
+  // so a later plain Browse visit doesn't re-apply a stale search/sort.
+  useEffect(() => { onConsumeInitial?.() }, [])
 
   // Open item: own listing → its offers page; otherwise the buyer item view.
   // Either way remember scroll so closing restores the exact list position.
@@ -135,13 +139,23 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit }) {
   const applyFilter = () => { setRegion(draftRegion); setCond(draftCond); setSort(draftSort); setFilterOpen(false) }
   const clearFilter = () => { setDraftRegion('All'); setDraftCond('All'); setDraftSort('Nearest') }
 
-  const filtered = items.filter(item => {
-    if (query && !item.title.toLowerCase().includes(query.toLowerCase())) return false
-    if (cat !== 'All' && item.cat !== cat) return false
-    if (region !== 'All' && item.region !== region) return false
-    if (cond !== 'All' && item.condition !== cond) return false
-    return true
-  })
+  const filtered = items
+    .filter(item => {
+      if (query && !item.title.toLowerCase().includes(query.toLowerCase())) return false
+      if (cat !== 'All' && item.cat !== cat) return false
+      if (region !== 'All' && item.region !== region) return false
+      if (cond !== 'All' && item.condition !== cond) return false
+      return true
+    })
+    .sort((a, b) => {
+      switch (sort) {
+        case 'Trending':      return ((b.likeCount + b.offerCount) - (a.likeCount + a.offerCount))
+        case 'Lowest price':  return a.price - b.price
+        case 'Highest price': return b.price - a.price
+        case 'Newest':        return new Date(b.createdAt) - new Date(a.createdAt)
+        default:              return 0   // 'Nearest' — keep server order
+      }
+    })
 
   return (
     <div className="min-h-screen bg-white font-sans">

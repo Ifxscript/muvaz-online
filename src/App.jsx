@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import { Menu, ArrowRight, Package, Search, CreditCard, Check, Star } from 'lucide-react'
+import { Menu, ArrowRight, Package, Search, CreditCard, Star, ChevronDown, Plus, TrendingUp, Play } from 'lucide-react'
 import MobileDrawer from './components/MobileDrawer.jsx'
 import Browse from './pages/Browse.jsx'
 import Auth from './pages/Auth.jsx'
@@ -73,6 +73,9 @@ export default function App() {
   const [activeListings, setActiveListings] = useState([])
   const [soldListings,   setSoldListings]   = useState([])
   const [verifiedNotice, setVerifiedNotice] = useState(null)   // 'success' | 'error' | null
+  const [heroQuery,      setHeroQuery]      = useState('')      // search box on the home hero
+  const [browseQuery,    setBrowseQuery]    = useState('')      // seed query passed into Browse
+  const [browseSort,     setBrowseSort]     = useState(null)    // seed sort passed into Browse
 
   // ── On mount: restore session + handle OAuth callback ───────────────────────
   useEffect(() => {
@@ -197,6 +200,13 @@ export default function App() {
     }
   }, [page, selectedItem, editItem])
 
+  // Open Browse, optionally seeded with a search query and/or sort (cleared after Browse reads them)
+  const goBrowse = ({ query = '', sort = null } = {}) => {
+    setBrowseQuery(query)
+    setBrowseSort(sort)
+    navTo('browse')
+  }
+
   // Seller opening the offers view for their own listing → push the advert page onto the stack
   const manageListing = item => navTo('advert', { item })
 
@@ -241,7 +251,7 @@ export default function App() {
     onSuccess={user => { setCurrentUser(user); setPendingGoogleUser(null); historyRef.current = []; setPage('home') }}
   />
 
-  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} currentUser={currentUser} onEdit={item => navTo('edit', { editItem: item })} />
+  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} currentUser={currentUser} onEdit={item => navTo('edit', { editItem: item })} initialQuery={browseQuery} initialSort={browseSort} onConsumeInitial={() => { setBrowseQuery(''); setBrowseSort(null) }} />
   if (page === 'auth')    return <Auth
     onBack={navBack}
     pendingGoogleUser={pendingGoogleUser}
@@ -339,71 +349,50 @@ export default function App() {
         }}
       />
 
-      {/* ── Hero ── */}
-      <section className="px-5 py-12 md:py-20 max-w-screen-xl mx-auto md:px-8">
-        <div className="md:grid md:grid-cols-[1fr_1fr] md:gap-14 lg:gap-20 md:items-center">
+      {/* ── Hero — search-led ── */}
+      <section className="px-5 pt-8 pb-6 md:pt-12 md:pb-10 max-w-screen-md mx-auto md:px-8">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 mb-5">
+          What are you selling today?
+        </h1>
 
-          {/* Left: copy */}
-          <div className="mb-10 md:mb-0">
-            <div className="inline-flex items-center gap-2 bg-zinc-100 border border-zinc-200 rounded-full px-3 py-1 mb-5">
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 shrink-0" />
-              <span className="text-xs font-semibold text-zinc-600 tracking-wide">Declutter marketplace · Abuja</span>
-            </div>
+        {/* Search bar */}
+        <form
+          onSubmit={e => { e.preventDefault(); goBrowse({ query: heroQuery.trim() }) }}
+          className="flex items-center gap-3 h-14 px-4 rounded-2xl bg-zinc-100 border border-zinc-200 focus-within:border-zinc-400 transition-colors"
+        >
+          <Search size={18} className="text-zinc-500 shrink-0" />
+          <input
+            value={heroQuery}
+            onChange={e => setHeroQuery(e.target.value)}
+            placeholder="Search the marketplace…"
+            className="flex-1 min-w-0 bg-transparent outline-none text-[15px] text-zinc-900 placeholder:text-zinc-400"
+          />
+          <span className="w-px h-5 bg-zinc-300 shrink-0" />
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 shrink-0 select-none">
+            Abuja <ChevronDown size={14} className="text-zinc-500" />
+          </span>
+        </form>
 
-            <h1 className="text-[2.6rem] md:text-5xl lg:text-[3.5rem] font-black tracking-tight leading-[1.05] text-zinc-900 mb-4">
-              Have stuff you<br />
-              no longer need?<br />
-              <span className="text-zinc-400">Sell it on muvaz.</span>
-            </h1>
-
-            <p className="text-base md:text-lg text-zinc-500 leading-relaxed mb-6 max-w-[420px]">
-              List your items, set your price, and let buyers come to you. Muvaz handles the payment securely — no random strangers, no awkward haggling.
-            </p>
-
-            <div className="flex flex-wrap gap-x-5 gap-y-2 mb-6">
-              {['Free to list', '5% on sale only', 'Secure payments'].map(t => (
-                <span key={t} className="flex items-center gap-1.5 text-sm text-zinc-500">
-                  <Check size={13} className="text-zinc-900 shrink-0" strokeWidth={2.5} />
-                  {t}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 mb-5">
-              <Button size="lg" className="w-full sm:w-auto gap-2 text-base h-12 px-7" onClick={() => navTo('browse')}>
-                Browse items <ArrowRight size={16} />
-              </Button>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto text-base h-12 px-7" onClick={() => navTo('upload')}>
-                List an item
-              </Button>
-            </div>
-
-            {/* Stats — single line, mobile only */}
-            <div className="md:hidden flex items-center gap-2 text-[12px] text-zinc-400 font-medium flex-wrap">
-              {STATS.map((s, i) => (
-                <span key={s.label} className="flex items-center gap-2">
-                  {i > 0 && <span className="opacity-40">·</span>}
-                  <span className="font-bold text-zinc-700">{s.value}</span>
-                  <span>{s.label}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: item grid — desktop only */}
-          <div className="hidden md:grid grid-cols-2 gap-4">
-            {activeListings.slice(0, 4).map(item => (
-              <div key={item.id} className="cursor-pointer" onClick={() => openItem(item)}>
-                <ListCard
-                  title={item.title} meta={`${fmt(item.price)} · Abuja`}
-                  tag={item.condition} likeCount={item.likeCount}
-                  saved={item.saved} offerCount={item.offerCount}
-                  image={item.images?.[0]}
-                  onSave={() => toggleSave(item)}
-                />
-              </div>
-            ))}
-          </div>
+        {/* Quick actions */}
+        <div className="scroll-row flex gap-2.5 overflow-x-auto mt-3.5 -mx-5 px-5 md:mx-0 md:px-0">
+          <button
+            onClick={() => requireAuth(() => navTo('upload'))}
+            className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-zinc-900 text-white text-[13px] font-semibold"
+          >
+            <Plus size={14} strokeWidth={2.5} /> Post ad
+          </button>
+          <button
+            onClick={() => goBrowse({ sort: 'Trending' })}
+            className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
+          >
+            <TrendingUp size={14} /> Trending
+          </button>
+          <button
+            onClick={() => navTo('help')}
+            className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
+          >
+            <Play size={12} fill="currentColor" /> How to sell
+          </button>
         </div>
       </section>
 
@@ -423,7 +412,7 @@ export default function App() {
       <section className="pt-6 pb-12 md:py-16 max-w-screen-xl mx-auto">
         <div className="flex items-end justify-between px-5 md:px-8 mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">Listed in Abuja</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">Recommended for you</h2>
             <p className="text-xs text-zinc-400 mt-0.5 font-medium">Abuja · Updated today</p>
           </div>
           <Button variant="ghost" size="sm" className="text-zinc-500 gap-1 -mr-2" onClick={() => navTo('browse')}>
