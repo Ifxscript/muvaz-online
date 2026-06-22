@@ -88,6 +88,15 @@ export default function App() {
   const [soldListings,   setSoldListings]   = useState([])
   const [verifiedNotice, setVerifiedNotice] = useState(null)   // 'success' | 'error' | null
   const [heroQuery,      setHeroQuery]      = useState('')      // search box on the home hero
+  const [heroWord,       setHeroWord]       = useState('selling')
+  const [heroVisible,    setHeroVisible]    = useState(true)
+  useEffect(() => {
+    const id = setInterval(() => {
+      setHeroVisible(false)
+      setTimeout(() => { setHeroWord(w => w === 'selling' ? 'buying' : 'selling'); setHeroVisible(true) }, 350)
+    }, 2500)
+    return () => clearInterval(id)
+  }, [])
   const [browseQuery,    setBrowseQuery]    = useState('')      // seed query passed into Browse
   const [browseSort,     setBrowseSort]     = useState(null)    // seed sort passed into Browse
   const [browseCat,      setBrowseCat]      = useState('All')   // seed category passed into Browse
@@ -368,7 +377,15 @@ export default function App() {
       {/* ── Hero — search-led ── */}
       <section className="px-5 pt-8 pb-6 md:pt-12 md:pb-10 max-w-screen-md mx-auto md:px-8">
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 mb-5">
-          What are you selling today?
+          What are you{' '}
+          <span style={{
+            color: '#D97757',
+            display: 'inline-block',
+            opacity: heroVisible ? 1 : 0,
+            transform: heroVisible ? 'translateY(0)' : 'translateY(-10px)',
+            transition: 'opacity 0.35s ease, transform 0.35s ease',
+          }}>{heroWord}</span>
+          {' '}today?
         </h1>
 
         {/* Search bar */}
