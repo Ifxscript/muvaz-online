@@ -200,7 +200,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
             <button key={t} onClick={() => switchTab(t)}
               className={cn(
                 'flex-1 py-2 rounded-full text-sm font-semibold transition-all',
-                tab === t ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'
+                tab === t ? 'bg-[#faf9f5] shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'
               )}>
               {t === 'signin' ? 'Sign in' : 'Sign up'}
             </button>
@@ -315,7 +315,7 @@ function Field({ label, right, children }) {
         <label className="text-sm font-semibold text-zinc-900">{label}</label>
         {right}
       </div>
-      <div className="flex items-center gap-2 h-12 px-3 rounded-md border border-zinc-200 bg-white focus-within:border-zinc-900 transition-colors">
+      <div className="flex items-center gap-2 h-12 px-3 rounded-md border border-zinc-200 bg-[#f0efe9] focus-within:border-zinc-900 transition-colors">
         {children}
       </div>
     </div>
@@ -335,7 +335,7 @@ function Divider() {
 function GoogleButton({ onClick, label }) {
   return (
     <button onClick={onClick}
-      className="w-full h-12 rounded-md border border-zinc-200 bg-white flex items-center justify-center gap-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors">
+      className="w-full h-12 rounded-md border border-zinc-200 bg-[#faf9f5] flex items-center justify-center gap-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors">
       <MGoogle />
       {label}
     </button>
@@ -354,12 +354,12 @@ function PhoneInput({ country, setCountry, phone, setPhone }) {
   return (
     <div className="flex gap-2">
       <select value={country} onChange={e => setCountry(e.target.value)}
-        className="h-12 px-3 rounded-md border border-zinc-200 bg-white text-sm font-medium text-zinc-700 cursor-pointer outline-none shrink-0">
+        className="h-12 px-3 rounded-md border border-zinc-200 bg-[#f0efe9] text-sm font-medium text-zinc-700 cursor-pointer outline-none shrink-0">
         {COUNTRY_CODES.map(c => (
           <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
         ))}
       </select>
-      <div className="flex-1 flex items-center h-12 px-3 rounded-md border border-zinc-200 focus-within:border-zinc-900 transition-colors">
+      <div className="flex-1 flex items-center h-12 px-3 rounded-md border border-zinc-200 bg-[#f0efe9] focus-within:border-zinc-900 transition-colors">
         <input type="tel" value={phone} onChange={e => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
           placeholder="803 123 4567"
           className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400" />

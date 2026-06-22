@@ -32,7 +32,7 @@ function Chip({ active, onClick, children }) {
         'h-8 px-3.5 rounded-full text-[13px] font-medium shrink-0 border transition-colors whitespace-nowrap',
         active
           ? 'bg-zinc-900 text-white border-zinc-900'
-          : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400'
+          : 'bg-[#faf9f5] text-zinc-500 border-zinc-200 hover:border-zinc-400'
       )}
     >
       {children}
@@ -52,7 +52,7 @@ function Sheet({ open, onClose, title, children }) {
       />
       <div
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl transition-transform duration-300 max-h-[85vh] flex flex-col',
+          'fixed bottom-0 left-0 right-0 z-50 bg-[#faf9f5] rounded-t-2xl transition-transform duration-300 max-h-[85vh] flex flex-col',
           open ? 'translate-y-0' : 'translate-y-full'
         )}
         style={{ transitionTimingFunction: 'cubic-bezier(.4,0,.2,1)' }}
@@ -161,7 +161,7 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
     <div className="min-h-screen bg-[#faf9f5] font-sans">
 
       {/* ── Sticky header ── */}
-      <div className="sticky top-0 z-30 bg-white border-b border-zinc-200">
+      <div className="sticky top-0 z-30 bg-[#faf9f5] border-b border-zinc-200">
 
         {/* Search row */}
         <div className="flex items-center gap-2 px-3 py-2.5">
@@ -172,7 +172,7 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
             <ArrowLeft size={20} className="text-zinc-700" />
           </button>
 
-          <div className="flex-1 flex items-center gap-2 h-10 px-3 rounded-lg bg-zinc-100 border border-zinc-200">
+          <div className="flex-1 flex items-center gap-2 h-10 px-3 rounded-lg bg-[#f0efe9] border border-zinc-200">
             <Search size={15} className="text-zinc-400 shrink-0" />
             <input
               type="text"
@@ -207,7 +207,7 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
               'md:hidden h-8 px-3 rounded-full text-[13px] font-semibold shrink-0 border flex items-center gap-1.5 transition-colors',
               activeFilters > 0
                 ? 'bg-zinc-900 text-white border-zinc-900'
-                : 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-400'
+                : 'bg-[#faf9f5] text-zinc-700 border-zinc-200 hover:border-zinc-400'
             )}
           >
             <SlidersHorizontal size={13} />

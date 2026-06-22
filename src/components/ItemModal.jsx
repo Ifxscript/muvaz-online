@@ -154,7 +154,7 @@ export default function ItemModal({ item, onClose }) {
               <div className="flex gap-2">
                 <button
                   onClick={() => setMode('offer')}
-                  className="flex-1 h-11 rounded-full bg-white text-zinc-900 text-[14px] font-bold border-none cursor-pointer"
+                  className="flex-1 h-11 rounded-full bg-[#faf9f5] text-zinc-900 text-[14px] font-bold border-none cursor-pointer"
                 >
                   Make an offer
                 </button>

@@ -25,7 +25,7 @@ function Pill({ active, onClick, children }) {
         'h-9 px-4 rounded-full text-[13px] font-medium border transition-all whitespace-nowrap',
         active
           ? 'bg-zinc-900 text-white border-zinc-900'
-          : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400'
+          : 'bg-[#faf9f5] text-zinc-500 border-zinc-200 hover:border-zinc-400'
       )}
     >
       {children}
@@ -164,7 +164,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
     <div className="min-h-screen bg-[#faf9f5] font-sans">
 
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-white border-b border-zinc-200">
+      <div className="sticky top-0 z-30 bg-[#faf9f5] border-b border-zinc-200">
         <div className="flex items-center gap-3 h-14 px-4 max-w-screen-lg mx-auto">
           <button
             onClick={onBack}
@@ -200,7 +200,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
               onClick={pickFile}
               className="rounded-xl border-2 border-dashed border-zinc-200 bg-zinc-50 py-8 flex flex-col items-center gap-2.5 cursor-pointer hover:border-zinc-400 transition-colors text-center"
             >
-              <div className="w-12 h-12 rounded-full bg-white border border-zinc-200 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-[#faf9f5] border border-zinc-200 flex items-center justify-center">
                 <Camera size={20} className="text-zinc-400" />
               </div>
               <p className="text-sm font-semibold text-zinc-700">Tap to upload photos</p>
@@ -227,7 +227,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
               {files.length < 8 && (
                 <button
                   onClick={pickFile}
-                  className="w-24 h-24 rounded-xl border-2 border-dashed border-zinc-200 bg-white flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-zinc-400 transition-colors shrink-0"
+                  className="w-24 h-24 rounded-xl border-2 border-dashed border-zinc-200 bg-[#faf9f5] flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-zinc-400 transition-colors shrink-0"
                 >
                   <Plus size={18} className="text-zinc-400" />
                   <span className="text-[11px] font-medium text-zinc-400">Add</span>
@@ -251,7 +251,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
                   'h-10 rounded-lg text-xs font-medium border transition-all px-2 truncate',
                   category === cat
                     ? 'bg-zinc-900 text-white border-zinc-900'
-                    : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400'
+                    : 'bg-[#faf9f5] text-zinc-500 border-zinc-200 hover:border-zinc-400'
                 )}
               >
                 {cat}
@@ -274,7 +274,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
               </label>
               <span className="text-xs text-zinc-400">{title.length}/80</span>
             </div>
-            <div className="flex items-center h-12 px-3 rounded-md border border-zinc-200 focus-within:border-zinc-900 transition-colors">
+            <div className="flex items-center h-12 px-3 rounded-md border border-zinc-200 bg-[#f0efe9] focus-within:border-zinc-900 transition-colors">
               <input
                 type="text"
                 value={title}
@@ -303,7 +303,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
               <label className="text-sm font-semibold text-zinc-900">Description</label>
               <span className="text-xs text-zinc-400">{desc.length}/500</span>
             </div>
-            <div className="rounded-md border border-zinc-200 focus-within:border-zinc-900 transition-colors">
+            <div className="rounded-md border border-zinc-200 bg-[#f0efe9] focus-within:border-zinc-900 transition-colors">
               <textarea
                 value={desc}
                 onChange={e => setDesc(e.target.value.slice(0, 500))}
@@ -352,7 +352,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
           <SectionTitle sub="Our team collects from you — buyers never see your address.">
             Pickup location
           </SectionTitle>
-          <div className="flex items-center gap-2 h-12 px-3 rounded-md border border-zinc-200 focus-within:border-zinc-900 transition-colors">
+          <div className="flex items-center gap-2 h-12 px-3 rounded-md border border-zinc-200 bg-[#f0efe9] focus-within:border-zinc-900 transition-colors">
             <MapPin size={16} className="text-zinc-400 shrink-0" />
             <input
               type="text"

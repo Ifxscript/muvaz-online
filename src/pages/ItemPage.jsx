@@ -88,7 +88,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
           </div>
           <button
             onClick={onBack}
-            className="fixed top-3 left-3 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-zinc-200 hover:bg-white transition-colors"
+            className="fixed top-3 left-3 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-[#faf9f5]/90 backdrop-blur-sm shadow-sm border border-zinc-200 hover:bg-[#faf9f5] transition-colors"
           >
             <ArrowLeft size={18} className="text-zinc-700" />
           </button>
@@ -184,7 +184,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
                 </p>
                 <div className="flex gap-2 items-center">
                   <div className={cn(
-                    'flex-1 flex items-center h-12 rounded-md border px-3 gap-1.5 bg-white transition-colors',
+                    'flex-1 flex items-center h-12 rounded-md border px-3 gap-1.5 bg-[#f0efe9] transition-colors',
                     error ? 'border-red-300' : 'border-zinc-300 focus-within:border-zinc-900'
                   )}>
                     <span className="text-base font-bold text-zinc-900">₦</span>
@@ -233,7 +233,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
             {/* Order placed */}
             {offerMode === 'bought' && (
               <div className="flex items-center gap-3 px-4 py-3.5 rounded-md bg-zinc-900">
-                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[#faf9f5]/20 flex items-center justify-center shrink-0">
                   <Check size={13} color="white" strokeWidth={2.5} />
                 </div>
                 <div className="min-w-0">

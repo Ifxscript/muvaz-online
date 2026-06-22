@@ -303,7 +303,7 @@ export default function App() {
       </div>
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-zinc-200">
+      <header className="sticky top-0 z-50 bg-[#faf9f5]/95 backdrop-blur-sm border-b border-zinc-200">
         <div className="flex items-center justify-between h-14 px-4 md:h-16 md:px-8 max-w-screen-xl mx-auto">
 
           {/* Wordmark */}
@@ -373,7 +373,7 @@ export default function App() {
         {/* Search bar */}
         <form
           onSubmit={e => { e.preventDefault(); goBrowse({ query: heroQuery.trim() }) }}
-          className="flex items-center gap-3 h-14 px-4 rounded-2xl bg-zinc-100 border border-zinc-200 focus-within:border-zinc-400 transition-colors"
+          className="flex items-center gap-3 h-14 px-4 rounded-2xl bg-[#f0efe9] border border-zinc-200 focus-within:border-zinc-400 transition-colors"
         >
           <Search size={18} className="text-zinc-500 shrink-0" />
           <input
@@ -398,13 +398,13 @@ export default function App() {
           </button>
           <button
             onClick={() => goBrowse({ sort: 'Trending' })}
-            className="shrink-0 h-9 px-4 rounded-full bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
+            className="shrink-0 h-9 px-4 rounded-full bg-[#faf9f5] border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
           >
             Trending
           </button>
           <button
             onClick={() => navTo('help')}
-            className="shrink-0 h-9 px-4 rounded-full bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
+            className="shrink-0 h-9 px-4 rounded-full bg-[#faf9f5] border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
           >
             How to sell
           </button>
@@ -432,7 +432,7 @@ export default function App() {
       </section>
 
       {/* ── Stats strip — desktop only ── */}
-      <div className="hidden md:block border-y border-zinc-200 bg-zinc-50">
+      <div className="hidden md:block border-y border-zinc-200 bg-[#faf9f5]">
         <div className="max-w-screen-xl mx-auto grid grid-cols-3 divide-x divide-zinc-200">
           {STATS.map(s => (
             <div key={s.label} className="flex flex-col items-center justify-center py-6 px-3 text-center gap-0.5">
@@ -511,7 +511,7 @@ export default function App() {
       )}
 
       {/* ── How it works ── */}
-      <section className="py-12 md:py-20 bg-zinc-50 border-y border-zinc-200">
+      <section className="py-12 md:py-20 bg-[#faf9f5] border-y border-zinc-200">
         <div className="max-w-screen-xl mx-auto">
 
           <div className="px-5 md:px-8 mb-8 md:text-center">
@@ -526,7 +526,7 @@ export default function App() {
           <div className="md:hidden scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5"
             style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
             {STEPS.map(({ step, Icon, title, body }) => (
-              <Card key={step} className="w-64 shrink-0 border-zinc-200 bg-white" style={{ scrollSnapAlign: 'start' }}>
+              <Card key={step} className="w-64 shrink-0 border-zinc-200 bg-[#faf9f5]" style={{ scrollSnapAlign: 'start' }}>
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center shrink-0">
@@ -545,7 +545,7 @@ export default function App() {
           {/* Desktop: 3-col grid */}
           <div className="hidden md:grid md:grid-cols-3 gap-6 px-8">
             {STEPS.map(({ step, Icon, title, body }) => (
-              <Card key={step} className="border-zinc-200 bg-white">
+              <Card key={step} className="border-zinc-200 bg-[#faf9f5]">
                 <CardContent className="p-8">
                   <div className="flex items-center justify-between mb-6">
                     <div className="w-12 h-12 rounded-xl bg-zinc-900 flex items-center justify-center">
@@ -622,7 +622,7 @@ export default function App() {
             Free to list. 5% on sale. Buyer comes to you — you just get paid.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button size="lg" className="bg-white text-zinc-900 hover:bg-zinc-100 w-full sm:w-auto h-12 px-7 text-base gap-2" onClick={() => navTo('upload')}>
+            <Button size="lg" className="bg-[#faf9f5] text-zinc-900 hover:bg-zinc-100 w-full sm:w-auto h-12 px-7 text-base gap-2" onClick={() => navTo('upload')}>
               List your first item <ArrowRight size={16} />
             </Button>
             <Button size="lg" variant="outline"
@@ -635,7 +635,7 @@ export default function App() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-zinc-200 bg-white">
+      <footer className="border-t border-zinc-200 bg-[#faf9f5]">
         <div className="max-w-screen-xl mx-auto px-5 md:px-8 py-10 md:py-14">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             {[

@@ -106,7 +106,7 @@ export function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
 
         {/* Floating back button */}
         <button onClick={onBack}
-          className="fixed top-3 left-3 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-zinc-200">
+          className="fixed top-3 left-3 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-[#faf9f5]/90 backdrop-blur-sm shadow-sm border border-zinc-200">
           <MChevLeft size={18} stroke="#18181b" />
         </button>
 
@@ -350,7 +350,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
 
       {/* Header */}
       <div style={{
-        position: 'sticky', top: 0, zIndex: 20, background: '#fff',
+        position: 'sticky', top: 0, zIndex: 20, background: '#faf9f5',
         borderBottom: `1px solid ${mBorder}`,
         display: 'flex', alignItems: 'center', height: 52, padding: '0 16px', gap: 12,
       }}>
@@ -516,12 +516,12 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
         <div style={{ padding: '40px 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
           <button onClick={() => onNavigate('upload')} style={{
             height: 44, padding: '0 18px', borderRadius: mRadiusSm,
-            border: `1.5px solid ${mText}`, background: '#fff', color: mText,
+            border: `1.5px solid ${mText}`, background: '#faf9f5', color: mText,
             fontFamily: mFont, fontSize: 14, fontWeight: 600, cursor: 'pointer',
           }}>Place a new advert</button>
           <button onClick={() => onNavigate('help')} style={{
             height: 40, padding: '0 16px', borderRadius: mRadiusSm,
-            border: `1px solid ${mBorder}`, background: '#fff', color: mMuted,
+            border: `1px solid ${mBorder}`, background: '#faf9f5', color: mMuted,
             fontFamily: mFont, fontSize: 13, cursor: 'pointer',
           }}>Feedback / help</button>
         </div>
@@ -536,7 +536,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
           ].map(({ label, weight, route, action }) => (
             <button key={label} onClick={() => action ? action() : route && onNavigate(route)} style={{
               height: 40, padding: '0 16px', borderRadius: mRadiusSm,
-              border: `1px solid ${mBorder}`, background: '#fff', color: mText,
+              border: `1px solid ${mBorder}`, background: '#faf9f5', color: mText,
               fontFamily: mFont, fontSize: 13, fontWeight: weight,
               cursor: 'pointer', whiteSpace: 'nowrap',
             }}>{label}</button>

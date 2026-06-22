@@ -1,6 +1,7 @@
 // ── Design tokens ─────────────────────────────────────────────
-export const mBg        = '#fafafa';
-export const mWhite     = '#ffffff';
+export const mBg        = '#faf9f5';
+export const mWhite     = '#faf9f5';   // warm off-white surface (was pure white)
+export const mInput     = '#f0efe9';   // recessed warm-grey fill for input fields
 export const mBorder    = '#e4e4e7';
 export const mBorder2   = '#d4d4d8';
 export const mText      = '#18181b';
@@ -105,7 +106,7 @@ export function MInput({ label, placeholder, value, type = 'text', state = 'defa
   return (
     <div style={{ ...style }}>
       {label && <label style={{ display: 'block', fontFamily: mFont, fontSize: 13, fontWeight: 500, color: mText, marginBottom: 6 }}>{label}</label>}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, padding: '0 12px', borderRadius: mRadiusSm, border: `1px solid ${borderColor}`, background: mWhite, boxShadow: shadow, transition: 'box-shadow .15s, border-color .15s' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, padding: '0 12px', borderRadius: mRadiusSm, border: `1px solid ${borderColor}`, background: mInput, boxShadow: shadow, transition: 'box-shadow .15s, border-color .15s' }}>
         {prefix && <span style={{ display: 'flex', alignItems: 'center', color: mMuted }}>{prefix}</span>}
         <span style={{ flex: 1, fontFamily: mFont, fontSize: 14, color: value ? mText : '#a1a1aa' }}>
           {value || placeholder}
@@ -123,7 +124,7 @@ export function MTextarea({ label, placeholder, value, rows = 3, count, max, sty
   return (
     <div style={{ ...style }}>
       {label && <label style={{ display: 'block', fontFamily: mFont, fontSize: 13, fontWeight: 500, color: mText, marginBottom: 6 }}>{label}</label>}
-      <div style={{ padding: '10px 12px', borderRadius: mRadiusSm, border: `1px solid ${mBorder}`, background: mWhite, minHeight: rows * 24 + 20 }}>
+      <div style={{ padding: '10px 12px', borderRadius: mRadiusSm, border: `1px solid ${mBorder}`, background: mInput, minHeight: rows * 24 + 20 }}>
         <span style={{ fontFamily: mFont, fontSize: 14, color: value ? mText : '#a1a1aa', lineHeight: 1.55 }}>{value || placeholder}</span>
       </div>
       {count != null && <p style={{ fontFamily: mFont, fontSize: 12, color: mMuted, margin: '4px 0 0', textAlign: 'right' }}>{count}/{max}</p>}

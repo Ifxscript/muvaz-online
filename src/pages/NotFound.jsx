@@ -11,7 +11,7 @@ export default function NotFound({ onNavigate }) {
       {/* 404 visual */}
       <div style={{ position: 'relative', marginBottom: 24 }}>
         <p style={{ fontFamily: mFont, fontSize: 128, fontWeight: 900, color: mMutedBg2, margin: 0, letterSpacing: '-6px', lineHeight: 1, userSelect: 'none' }}>404</p>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 60, height: 60, borderRadius: '50%', background: '#fff', border: `1.5px solid ${mBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: mShadow }}>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 60, height: 60, borderRadius: '50%', background: '#faf9f5', border: `1.5px solid ${mBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: mShadow }}>
           <MSearch size={26} stroke={mMuted} />
         </div>
       </div>

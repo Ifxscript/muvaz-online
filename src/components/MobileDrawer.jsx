@@ -21,14 +21,14 @@ export default function MobileDrawer({ open, active, onClose, onNavigate, curren
       {/* Drawer panel */}
       <div
         className={cn(
-          'fixed inset-0 z-50 bg-white flex flex-col overflow-y-auto',
+          'fixed inset-0 z-50 bg-[#faf9f5] flex flex-col overflow-y-auto',
           'transition-transform duration-250',
           open ? 'translate-x-0' : '-translate-x-full'
         )}
         style={{ transitionTimingFunction: 'cubic-bezier(.4,0,.2,1)' }}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white flex items-center h-14 px-4 border-b border-zinc-200 shrink-0">
+        <div className="sticky top-0 z-10 bg-[#faf9f5] flex items-center h-14 px-4 border-b border-zinc-200 shrink-0">
           <span className="font-extrabold text-xl tracking-tight text-zinc-900 select-none">
             muvaz<span className="text-zinc-300">.</span>
           </span>
@@ -94,7 +94,7 @@ export default function MobileDrawer({ open, active, onClose, onNavigate, curren
             <p className="text-xs text-zinc-400 mb-3 leading-relaxed">We'll sell everything for you.</p>
             <Button
               size="sm"
-              className="bg-white text-zinc-900 hover:bg-zinc-100 gap-1.5"
+              className="bg-[#faf9f5] text-zinc-900 hover:bg-zinc-100 gap-1.5"
               onClick={() => { onNavigate?.('List an item'); onClose() }}
             >
               Book a pickup <ChevronRight size={13} />

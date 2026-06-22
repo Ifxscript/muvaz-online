@@ -37,7 +37,7 @@ export default function Help({ onNavigate }) {
 
       {/* Header */}
       <div style={{
-        position: 'sticky', top: 0, zIndex: 20, background: '#fff',
+        position: 'sticky', top: 0, zIndex: 20, background: '#faf9f5',
         borderBottom: `1px solid ${mBorder}`,
         display: 'flex', alignItems: 'center', height: 52, padding: '0 16px', gap: 12,
       }}>
@@ -62,7 +62,7 @@ export default function Help({ onNavigate }) {
         {/* Quick links */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
           {QUICK_LINKS.map(({ label, route }) => (
-            <div key={label} onClick={() => route && onNavigate(route)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: mRadius, border: `1px solid ${mBorder}`, cursor: route ? 'pointer' : 'default', background: '#fff' }}>
+            <div key={label} onClick={() => route && onNavigate(route)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: mRadius, border: `1px solid ${mBorder}`, cursor: route ? 'pointer' : 'default', background: '#faf9f5' }}>
               <span style={{ fontFamily: mFont, fontSize: 13, fontWeight: 500, color: mText }}>{label}</span>
               <MChevRight size={14} stroke={mMuted} />
             </div>
@@ -102,7 +102,7 @@ export default function Help({ onNavigate }) {
 
         {sent ? (
           <div style={{ padding: 24, borderRadius: mRadiusLg, background: mAccentBg, border: `1px solid rgba(24,24,27,0.12)`, textAlign: 'center' }}>
-            <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fff', border: `1.5px solid ${mAccent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#faf9f5', border: `1.5px solid ${mAccent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
               <MCheck size={22} stroke={mAccent} />
             </div>
             <p style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText, margin: '0 0 4px' }}>Message sent!</p>
@@ -119,7 +119,7 @@ export default function Help({ onNavigate }) {
               ].map(({ label, value, set, placeholder, type }) => (
                 <div key={label}>
                   <label style={{ display: 'block', fontFamily: mFont, fontSize: 13, fontWeight: 500, color: mText, marginBottom: 6 }}>{label}</label>
-                  <div style={{ display: 'flex', alignItems: 'center', height: 40, padding: '0 12px', borderRadius: mRadiusSm, border: `1px solid ${mBorder}`, background: '#fff' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', height: 40, padding: '0 12px', borderRadius: mRadiusSm, border: `1px solid ${mBorder}`, background: '#f0efe9' }}>
                     <input type={type} value={value} onChange={e => set(e.target.value)} placeholder={placeholder}
                       style={{ flex: 1, border: 'none', outline: 'none', fontFamily: mFont, fontSize: 14, color: mText, background: 'transparent' }} />
                   </div>
@@ -130,7 +130,7 @@ export default function Help({ onNavigate }) {
             {/* Subject */}
             <div>
               <label style={{ display: 'block', fontFamily: mFont, fontSize: 13, fontWeight: 500, color: mText, marginBottom: 6 }}>Subject</label>
-              <div style={{ display: 'flex', alignItems: 'center', height: 40, padding: '0 12px', borderRadius: mRadiusSm, border: `1px solid ${mBorder}`, background: '#fff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', height: 40, padding: '0 12px', borderRadius: mRadiusSm, border: `1px solid ${mBorder}`, background: '#f0efe9' }}>
                 <select value={subject} onChange={e => setSubject(e.target.value)}
                   style={{ flex: 1, border: 'none', outline: 'none', fontFamily: mFont, fontSize: 14, color: mText, background: 'transparent', cursor: 'pointer' }}>
                   <option>General question</option>
@@ -145,7 +145,7 @@ export default function Help({ onNavigate }) {
             {/* Message */}
             <div>
               <label style={{ display: 'block', fontFamily: mFont, fontSize: 13, fontWeight: 500, color: mText, marginBottom: 6 }}>Message</label>
-              <div style={{ padding: '10px 12px', borderRadius: mRadiusSm, border: `1px solid ${mBorder}`, background: '#fff' }}>
+              <div style={{ padding: '10px 12px', borderRadius: mRadiusSm, border: `1px solid ${mBorder}`, background: '#f0efe9' }}>
                 <textarea value={message} onChange={e => setMessage(e.target.value)} rows={4} placeholder="Tell us how we can help…"
                   style={{ width: '100%', border: 'none', outline: 'none', fontFamily: mFont, fontSize: 14, color: mText, background: 'transparent', resize: 'none', lineHeight: 1.55, boxSizing: 'border-box' }} />
               </div>
