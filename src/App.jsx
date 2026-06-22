@@ -12,7 +12,7 @@ import ItemPage from './pages/ItemPage.jsx'
 import Admin from './pages/Admin.jsx'
 import { setToken, clearToken, authApi, listingsApi, normalizeListing, recordVisit } from './lib/api.js'
 import { Button } from './components/ui/button.jsx'
-import { Badge } from './components/ui/badge.jsx'
+
 import P5PeteAvatar from './components/P5PeteAvatar.jsx'
 import { Separator } from './components/ui/separator.jsx'
 import { Card, CardContent } from './components/ui/card.jsx'
@@ -68,9 +68,9 @@ function Stars({ size = 13 }) {
 
 function SectionLabel({ children }) {
   return (
-    <Badge variant="secondary" className="mb-3 text-[11px] font-semibold tracking-widest uppercase rounded-full">
+    <span className="mb-3 inline-block text-[11px] font-semibold tracking-widest uppercase text-[#D97757]">
       {children}
-    </Badge>
+    </span>
   )
 }
 
@@ -300,7 +300,7 @@ export default function App() {
         <span className="opacity-25">·</span>
         <span>Secure payment</span>
         <span className="opacity-25">·</span>
-        <span>Abuja's marketplace</span>
+        <span className="text-[#D97757] font-semibold">declutter marketplace</span>
       </div>
 
       {/* ── Header ── */}
@@ -309,7 +309,7 @@ export default function App() {
 
           {/* Wordmark */}
           <button onClick={() => navTo('home')} className="font-extrabold text-xl tracking-tight text-zinc-900 select-none bg-transparent border-none cursor-pointer p-0">
-            muvaz<span className="text-zinc-300">.</span>
+            muvaz<span className="text-[#D97757]">.</span>
           </button>
 
           {/* Desktop nav */}
@@ -327,13 +327,13 @@ export default function App() {
             {currentUser ? (
               <button onClick={() => navTo('profile')}
                 className="flex items-center gap-2 h-9 px-3 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm font-medium text-zinc-700">
-                <P5PeteAvatar displaySize={28} userId={currentUser.id ?? currentUser.email} />
+                <P5PeteAvatar displaySize={34} userId={currentUser.id ?? currentUser.email} />
                 {currentUser.name?.split(' ')[0]}
               </button>
             ) : (
               <Button variant="ghost" size="sm" className="text-zinc-600" onClick={() => navTo('auth')}>Sign in</Button>
             )}
-            <Button size="sm" onClick={() => requireAuth(() => navTo('upload'))}>Start selling</Button>
+            <Button size="sm" className="bg-[#D97757] hover:bg-[#c96848] text-white border-0" onClick={() => requireAuth(() => navTo('upload'))}>Start selling</Button>
           </div>
 
           {/* Mobile hamburger / avatar */}
@@ -342,7 +342,7 @@ export default function App() {
             className="md:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-zinc-100 transition-colors"
           >
             {currentUser
-              ? <P5PeteAvatar displaySize={32} userId={currentUser.id ?? currentUser.email} />
+              ? <P5PeteAvatar displaySize={38} userId={currentUser.id ?? currentUser.email} />
               : <Menu size={20} />}
           </button>
         </div>
@@ -393,7 +393,7 @@ export default function App() {
         <div className="scroll-row flex gap-2.5 overflow-x-auto mt-3.5 -mx-5 px-5 md:mx-0 md:px-0">
           <button
             onClick={() => requireAuth(() => navTo('upload'))}
-            className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-zinc-900 text-white text-[13px] font-semibold"
+            className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-[#D97757] text-white text-[13px] font-semibold"
           >
             <Plus size={14} strokeWidth={2.5} /> Post ad
           </button>
@@ -536,7 +536,7 @@ export default function App() {
               <Card key={step} className="w-64 shrink-0 border-zinc-200 bg-[#faf9f5]" style={{ scrollSnapAlign: 'start' }}>
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-[#D97757] flex items-center justify-center shrink-0">
                       <Icon size={18} color="white" />
                     </div>
                     <span className="font-mono text-sm font-semibold text-zinc-200">{step}</span>
@@ -555,7 +555,7 @@ export default function App() {
               <Card key={step} className="border-zinc-200 bg-[#faf9f5]">
                 <CardContent className="p-8">
                   <div className="flex items-center justify-between mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-zinc-900 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xl bg-[#D97757] flex items-center justify-center">
                       <Icon size={22} color="white" />
                     </div>
                     <span className="font-mono text-base font-semibold text-zinc-200">{step}</span>
@@ -629,7 +629,7 @@ export default function App() {
             Free to list. 5% on sale. Buyer comes to you — you just get paid.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button size="lg" className="bg-[#faf9f5] text-zinc-900 hover:bg-zinc-100 w-full sm:w-auto h-12 px-7 text-base gap-2" onClick={() => navTo('upload')}>
+            <Button size="lg" className="bg-[#D97757] hover:bg-[#c96848] text-white border-0 w-full sm:w-auto h-12 px-7 text-base gap-2 transition-colors" onClick={() => navTo('upload')}>
               List your first item <ArrowRight size={16} />
             </Button>
             <Button size="lg" variant="outline"
@@ -676,7 +676,7 @@ export default function App() {
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <span className="font-extrabold text-xl tracking-tight text-zinc-900 select-none">
-              muvaz<span className="text-zinc-300">.</span>
+              muvaz<span className="text-[#D97757]">.</span>
             </span>
             <p className="text-xs text-zinc-400">© 2026 muvaz.online · Made in Abuja</p>
           </div>

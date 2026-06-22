@@ -24,7 +24,7 @@ function Pill({ active, onClick, children }) {
       className={cn(
         'h-9 px-4 rounded-full text-[13px] font-medium border transition-all whitespace-nowrap',
         active
-          ? 'bg-zinc-900 text-white border-zinc-900'
+          ? 'bg-[#D97757] text-white border-[#D97757]'
           : 'bg-[#faf9f5] text-zinc-500 border-zinc-200 hover:border-zinc-400'
       )}
     >
@@ -212,7 +212,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
                 <div key={f.preview} className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-zinc-100">
                   <img src={f.preview} alt="" className="w-full h-full object-cover" />
                   {i === 0 && (
-                    <span className="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-zinc-900 text-white rounded px-1.5 py-0.5">
+                    <span className="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-[#D97757] text-white rounded px-1.5 py-0.5">
                       COVER
                     </span>
                   )}
@@ -250,7 +250,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
                 className={cn(
                   'h-10 rounded-lg text-xs font-medium border transition-all px-2 truncate',
                   category === cat
-                    ? 'bg-zinc-900 text-white border-zinc-900'
+                    ? 'bg-[#D97757] text-white border-[#D97757]'
                     : 'bg-[#faf9f5] text-zinc-500 border-zinc-200 hover:border-zinc-400'
                 )}
               >
@@ -370,7 +370,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
             <p className="text-sm text-red-500 text-center mb-3">{submitError}</p>
           )}
           <Button
-            className={cn('w-full h-13 text-base transition-colors', (!canSubmit || submitting) && 'opacity-40')}
+            className={cn('w-full h-13 text-base transition-colors bg-[#D97757] hover:bg-[#c96848] text-white border-0', (!canSubmit || submitting) && 'opacity-40')}
             style={{ height: 52 }}
             disabled={!canSubmit || submitting}
             onClick={handleSubmit}

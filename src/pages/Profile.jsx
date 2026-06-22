@@ -383,7 +383,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, onUpdateUser, c
         <button onClick={() => onNavigate('home')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', padding: 6, borderRadius: mRadiusSm }}>
           <MChevLeft size={20} stroke={mText} />
         </button>
-        <P5PeteAvatar displaySize={40} userId={currentUser?.id ?? currentUser?.email} />
+        <P5PeteAvatar displaySize={52} userId={currentUser?.id ?? currentUser?.email} />
         <span style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText }}>{currentUser?.name ?? 'My profile'}</span>
       </div>
 
@@ -537,7 +537,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, onUpdateUser, c
         <div style={{ padding: '40px 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
           <button onClick={() => onNavigate('upload')} style={{
             height: 44, padding: '0 18px', borderRadius: mRadiusSm,
-            border: `1.5px solid ${mText}`, background: '#faf9f5', color: mText,
+            border: 'none', background: '#D97757', color: '#fff',
             fontFamily: mFont, fontSize: 14, fontWeight: 600, cursor: 'pointer',
           }}>Place a new advert</button>
           <button onClick={() => onNavigate('help')} style={{
@@ -602,7 +602,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, onUpdateUser, c
             <button
               onClick={saveEdit}
               disabled={saving}
-              style={{ height: 48, borderRadius: mRadiusSm, background: mText, color: '#fff', fontFamily: mFont, fontSize: 15, fontWeight: 700, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, marginTop: 4 }}
+              style={{ height: 48, borderRadius: mRadiusSm, background: '#D97757', color: '#fff', fontFamily: mFont, fontSize: 15, fontWeight: 700, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, marginTop: 4 }}
             >
               {saving ? 'Saving…' : 'Save changes'}
             </button>

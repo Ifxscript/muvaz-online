@@ -232,7 +232,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
 
             {/* Order placed */}
             {offerMode === 'bought' && (
-              <div className="flex items-center gap-3 px-4 py-3.5 rounded-md bg-zinc-900">
+              <div className="flex items-center gap-3 px-4 py-3.5 rounded-md bg-[#D97757]">
                 <div className="w-6 h-6 rounded-full bg-[#faf9f5]/20 flex items-center justify-center shrink-0">
                   <Check size={13} color="white" strokeWidth={2.5} />
                 </div>

@@ -31,7 +31,7 @@ function Chip({ active, onClick, children }) {
       className={cn(
         'h-8 px-3.5 rounded-full text-[13px] font-medium shrink-0 border transition-colors whitespace-nowrap',
         active
-          ? 'bg-zinc-900 text-white border-zinc-900'
+          ? 'bg-[#D97757] text-white border-[#D97757]'
           : 'bg-[#faf9f5] text-zinc-500 border-zinc-200 hover:border-zinc-400'
       )}
     >
@@ -190,7 +190,7 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
 
           <button
             onClick={() => setGrid(g => g === 2 ? 1 : 2)}
-            className="flex items-center justify-center w-10 h-10 rounded-lg bg-zinc-900 shrink-0"
+            className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#D97757] shrink-0"
           >
             {grid === 2
               ? <LayoutGrid size={16} color="white" />
@@ -206,7 +206,7 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
             className={cn(
               'md:hidden h-8 px-3 rounded-full text-[13px] font-semibold shrink-0 border flex items-center gap-1.5 transition-colors',
               activeFilters > 0
-                ? 'bg-zinc-900 text-white border-zinc-900'
+                ? 'bg-[#D97757] text-white border-[#D97757]'
                 : 'bg-[#faf9f5] text-zinc-700 border-zinc-200 hover:border-zinc-400'
             )}
           >

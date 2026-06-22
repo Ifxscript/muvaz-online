@@ -58,7 +58,7 @@ export default function P5PeteAvatar({ displaySize = 64, userId = null, style = 
         };
 
         p.draw = () => {
-          p.background(primB[traitIndices.clr]);
+          p.background('#F2E8D5');
           col2 = primC[traitIndices.clr];
           col2b = 20;
           drawComp();
@@ -114,9 +114,9 @@ export default function P5PeteAvatar({ displaySize = 64, userId = null, style = 
 
         // ── bot ───────────────────────────────────────────────────────────────
         function drawComp() {
-          p.translate(0, 25, 0); // shift bot down so head sits centred in viewport
-          if (p.width < minCanvasSizetwo || p.height < minCanvasSizetwo) drawBot(0.6);
-          else drawBot(1);
+          p.translate(0, 20, 0);
+          if (p.width < minCanvasSizetwo || p.height < minCanvasSizetwo) drawBot(0.75);
+          else drawBot(1.1);
         }
 
         function drawBot(sv) {

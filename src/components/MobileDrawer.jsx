@@ -45,7 +45,7 @@ export default function MobileDrawer({ open, active, onClose, onNavigate, curren
         {currentUser && (
           <div className="px-4 py-3 border-b border-zinc-100">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50">
-              <P5PeteAvatar displaySize={40} userId={currentUser?.id ?? currentUser?.email} />
+              <P5PeteAvatar displaySize={48} userId={currentUser?.id ?? currentUser?.email} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-zinc-900 leading-none truncate">{currentUser.name}</p>
                 <p className="text-xs text-zinc-400 mt-0.5 truncate">{currentUser.email}</p>
@@ -93,7 +93,7 @@ export default function MobileDrawer({ open, active, onClose, onNavigate, curren
             <p className="text-xs text-zinc-400 mb-3 leading-relaxed">List it and reach buyers.</p>
             <Button
               size="sm"
-              className="bg-[#faf9f5] text-zinc-900 hover:bg-zinc-100 gap-1.5"
+              className="bg-[#D97757] hover:bg-[#c96848] text-white border-0 gap-1.5"
               onClick={() => { onNavigate?.('List an item'); onClose() }}
             >
               List an item <ChevronRight size={13} />

@@ -153,7 +153,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
           {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
 
           <div className="flex flex-col gap-3 mt-8">
-            <Button className="w-full h-12 text-base" disabled={loading || phone.length < 7} onClick={handleCompleteProfile}>
+            <Button className="w-full h-12 text-base bg-[#D97757] hover:bg-[#c96848] text-white border-0" disabled={loading || phone.length < 7} onClick={handleCompleteProfile}>
               {loading ? 'Saving…' : 'Continue'}
             </Button>
           </div>
@@ -229,7 +229,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
 
             {error && <p className="text-xs text-red-500 -mt-1">{error}</p>}
 
-            <Button className="w-full h-12 text-base mt-1" disabled={loading} onClick={handleSignIn}>
+            <Button className="w-full h-12 text-base bg-[#D97757] hover:bg-[#c96848] text-white border-0 mt-1" disabled={loading} onClick={handleSignIn}>
               {loading ? 'Signing in…' : 'Sign in'}
             </Button>
 
@@ -280,7 +280,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
 
             {error && <p className="text-xs text-red-500 -mt-1">{error}</p>}
 
-            <Button className="w-full h-12 text-base mt-1" disabled={loading} onClick={handleSignUp}>
+            <Button className="w-full h-12 text-base bg-[#D97757] hover:bg-[#c96848] text-white border-0 mt-1" disabled={loading} onClick={handleSignUp}>
               {loading ? 'Creating account…' : 'Create account'}
             </Button>
 
