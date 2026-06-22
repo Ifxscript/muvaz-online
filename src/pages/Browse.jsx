@@ -11,7 +11,7 @@ import { listingsApi, normalizeListing } from '../lib/api.js'
 import { CONDITION_LABEL } from '../lib/constants.js'
 
 const CATS    = ['All', 'Furniture', 'Electronics', 'Clothing', 'Sports', 'Kitchen', 'Other']
-const REGIONS = ['All', 'Kreuzberg', 'Neukölln', 'Mitte', 'Prenzlauer Berg', 'Charlottenburg', 'Schöneberg', 'Friedrichshain']
+const REGIONS = ['All', 'Garki', 'Wuse', 'Maitama', 'Asokoro', 'Gwarinpa', 'Kubwa', 'Lugbe', 'Kado', 'Jabi', 'Utako']
 const CONDS   = ['All', 'LIKE_NEW', 'GREAT', 'GOOD', 'FAIR']
 const SORTS   = ['Nearest', 'Trending', 'Lowest price', 'Highest price', 'Newest']
 
