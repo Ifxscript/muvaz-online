@@ -3,7 +3,7 @@ import P5PeteAvatar from '../components/P5PeteAvatar.jsx'
 import { Separator } from '../components/ui/separator.jsx'
 import ListCard from '../components/ListCard.jsx'
 import { CONDITION_LABEL } from '../lib/constants.js'
-import { listingsApi, offersApi, normalizeListing } from '../lib/api.js'
+import { listingsApi, offersApi, authApi, normalizeListing } from '../lib/api.js'
 import {
   MPen, MTrash, MChevLeft, MBadge, MSeparator,
   mFont, mText, mSubtext, mMuted, mMutedBg, mBorder, mBorder2,
@@ -301,13 +301,38 @@ export function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
 }
 
 // ── Profile page ──────────────────────────────────────────────────────────────
-export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) {
+export default function Profile({ onNavigate, onEdit, onSignOut, onUpdateUser, currentUser }) {
   const [selectedAdvert, setSelectedAdvert] = useState(null)
   const [adverts,        setAdverts]        = useState([])
   const [sold,           setSold]           = useState([])
   const [savedListings,  setSavedListings]  = useState([])
   const [placedOffers,   setPlacedOffers]   = useState([])
   const [loading,        setLoading]        = useState(true)
+  const [editOpen,       setEditOpen]       = useState(false)
+  const [draftName,      setDraftName]      = useState('')
+  const [draftPhone,     setDraftPhone]     = useState('')
+  const [saving,         setSaving]         = useState(false)
+  const [saveErr,        setSaveErr]        = useState('')
+
+  const openEdit = () => {
+    setDraftName(currentUser?.name ?? '')
+    setDraftPhone(currentUser?.phone ?? '')
+    setSaveErr('')
+    setEditOpen(true)
+  }
+  const saveEdit = async () => {
+    if (!draftName.trim()) { setSaveErr('Name is required'); return }
+    setSaving(true); setSaveErr('')
+    try {
+      const updated = await authApi.completeProfile({ name: draftName.trim(), phone: draftPhone.trim() })
+      onUpdateUser?.(updated)
+      setEditOpen(false)
+    } catch {
+      setSaveErr('Failed to save. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   useEffect(() => {
     Promise.all([
@@ -525,7 +550,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
         {/* Account links */}
         <div style={{ padding: '24px 20px 48px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
           {[
-            { label: 'Edit profile',     weight: 500, route: null, action: null },
+            { label: 'Edit profile',     weight: 500, route: null, action: openEdit },
             { label: 'Notifications',    weight: 500, route: null, action: null },
             { label: 'Privacy & safety', weight: 500, route: null, action: null },
             { label: 'Sign out',         weight: 600, route: null, action: onSignOut },
@@ -540,6 +565,50 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
         </div>
 
       </div>
+
+      {/* ── Edit profile sheet ── */}
+      {editOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <div onClick={() => setEditOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+          <div style={{ position: 'relative', background: '#faf9f5', borderRadius: `${mRadiusLg} ${mRadiusLg} 0 0`, padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontFamily: mFont, fontSize: 17, fontWeight: 700, color: mText }}>Edit profile</span>
+              <button onClick={() => setEditOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: mMuted, fontFamily: mFont, fontSize: 14 }}>Cancel</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontFamily: mFont, fontSize: 12, fontWeight: 600, color: mMuted }}>Name</label>
+              <input
+                value={draftName}
+                onChange={e => setDraftName(e.target.value)}
+                placeholder="Your name"
+                style={{ height: 44, padding: '0 14px', borderRadius: mRadiusSm, border: `1.5px solid ${mBorder}`, background: '#f0efe9', fontFamily: mFont, fontSize: 15, color: mText, outline: 'none' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontFamily: mFont, fontSize: 12, fontWeight: 600, color: mMuted }}>Phone (WhatsApp)</label>
+              <input
+                value={draftPhone}
+                onChange={e => setDraftPhone(e.target.value)}
+                placeholder="+234 800 000 0000"
+                type="tel"
+                style={{ height: 44, padding: '0 14px', borderRadius: mRadiusSm, border: `1.5px solid ${mBorder}`, background: '#f0efe9', fontFamily: mFont, fontSize: 15, color: mText, outline: 'none' }}
+              />
+            </div>
+
+            {saveErr && <p style={{ fontFamily: mFont, fontSize: 13, color: '#c0392b', margin: 0 }}>{saveErr}</p>}
+
+            <button
+              onClick={saveEdit}
+              disabled={saving}
+              style={{ height: 48, borderRadius: mRadiusSm, background: mText, color: '#fff', fontFamily: mFont, fontSize: 15, fontWeight: 700, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, marginTop: 4 }}
+            >
+              {saving ? 'Saving…' : 'Save changes'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

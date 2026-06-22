@@ -278,7 +278,7 @@ export default function App() {
     ? <Upload onBack={navBack} />
     : (() => { setPage('auth'); return null })()
   if (page === 'profile') return currentUser
-    ? <Profile currentUser={currentUser} onNavigate={p => navTo(p)} onSignOut={handleSignOut} onEdit={item => navTo('edit', { editItem: item })} />
+    ? <Profile currentUser={currentUser} onNavigate={p => navTo(p)} onSignOut={handleSignOut} onEdit={item => navTo('edit', { editItem: item })} onUpdateUser={u => setCurrentUser(prev => ({ ...prev, ...u }))} />
     : (() => { setPage('auth'); return null })()
   if (page === 'advert') return currentUser
     ? <MyAdvertPage advert={selectedItem} onBack={navBack} onDelete={() => {}} onEdit={item => navTo('edit', { editItem: item })} />
