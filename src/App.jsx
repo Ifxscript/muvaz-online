@@ -336,12 +336,14 @@ export default function App() {
             <Button size="sm" onClick={() => requireAuth(() => navTo('upload'))}>Start selling</Button>
           </div>
 
-          {/* Mobile hamburger */}
+          {/* Mobile hamburger / avatar */}
           <button
             onClick={() => setMenuOpen(v => !v)}
             className="md:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-zinc-100 transition-colors"
           >
-            <Menu size={20} />
+            {currentUser
+              ? <P5PeteAvatar displaySize={32} userId={currentUser.id ?? currentUser.email} />
+              : <Menu size={20} />}
           </button>
         </div>
       </header>
