@@ -33,7 +33,7 @@ export default function Help({ onNavigate }) {
   const [sent, setSent]       = useState(false)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff' }}>
+    <div style={{ minHeight: '100vh', background: '#faf9f5' }}>
 
       {/* Header */}
       <div style={{

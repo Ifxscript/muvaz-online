@@ -253,7 +253,7 @@ export default function App() {
 
   // ── Auth loading splash ─────────────────────────────────────────────────────
   if (authLoading) return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
+    <div className="min-h-screen bg-[#faf9f5] flex items-center justify-center">
       <p className="font-extrabold text-xl tracking-tight text-zinc-300 select-none animate-pulse">muvaz.</p>
     </div>
   )
@@ -291,7 +291,7 @@ export default function App() {
   if (page !== 'home')    return <NotFound onNavigate={p => navTo(p)} />
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className="min-h-screen bg-[#faf9f5] font-sans">
 
       {/* ── Announcement bar ── */}
       <div className="bg-zinc-900 text-white text-[11px] font-medium py-2 flex justify-center gap-5 tracking-wide select-none">
@@ -448,7 +448,6 @@ export default function App() {
         <div className="flex items-end justify-between px-5 md:px-8 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">Recommended for you</h2>
-            <p className="text-xs text-zinc-400 mt-0.5 font-medium">Abuja · Updated today</p>
           </div>
           <Button variant="ghost" size="sm" className="text-zinc-500 gap-1 -mr-2" onClick={() => navTo('browse')}>
             See all <ArrowRight size={13} />

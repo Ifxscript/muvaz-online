@@ -563,7 +563,7 @@ export default function Admin({ onNavigate }) {
   const [tab, setTab] = useState('Dashboard')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fafafa' }}>
+    <div style={{ minHeight: '100vh', background: '#faf9f5' }}>
 
       {/* Header */}
       <div style={{

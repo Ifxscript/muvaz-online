@@ -93,7 +93,7 @@ export function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
   }
 
   return (
-    <div className="min-h-screen bg-white font-sans pb-10">
+    <div className="min-h-screen bg-[#faf9f5] font-sans pb-10">
 
       {/* ── Main image with floating back + status ── */}
       <div className="relative">
@@ -346,7 +346,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
   const listedValue   = adverts.reduce((s, a) => s + (a.price ?? 0), 0)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff' }}>
+    <div style={{ minHeight: '100vh', background: '#faf9f5' }}>
 
       {/* Header */}
       <div style={{

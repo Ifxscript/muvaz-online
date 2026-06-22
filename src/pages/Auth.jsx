@@ -97,7 +97,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
 
   if (step === 'verify-email') {
     return (
-      <div className="min-h-screen bg-white font-sans flex flex-col items-center justify-center px-5 text-center">
+      <div className="min-h-screen bg-[#faf9f5] font-sans flex flex-col items-center justify-center px-5 text-center">
         <div className="w-16 h-16 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center mb-6">
           <Mail size={26} className="text-zinc-700" />
         </div>
@@ -117,7 +117,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
 
   if (step === 'phone') {
     return (
-      <div className="min-h-screen bg-white font-sans flex flex-col">
+      <div className="min-h-screen bg-[#faf9f5] font-sans flex flex-col">
         <div className="px-5 pt-5">
           {onBack && (
             <button onClick={() => setStep('form')}
@@ -165,7 +165,7 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
   // ── Main form ─────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-white font-sans flex flex-col">
+    <div className="min-h-screen bg-[#faf9f5] font-sans flex flex-col">
 
       <div className="px-5 pt-5">
         <button onClick={onBack}

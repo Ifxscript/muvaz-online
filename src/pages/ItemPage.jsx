@@ -68,7 +68,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
   const cancelOffer = () => { setOfferMode('idle'); setAmount(''); setError('') }
 
   return (
-    <div className="min-h-screen bg-white font-sans pb-10">
+    <div className="min-h-screen bg-[#faf9f5] font-sans pb-10">
 
       <div className="max-w-screen-lg mx-auto">
 

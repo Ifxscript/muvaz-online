@@ -6,7 +6,7 @@ import {
 
 export default function NotFound({ onNavigate }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', textAlign: 'center' }}>
+    <div style={{ minHeight: '100vh', background: '#faf9f5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', textAlign: 'center' }}>
 
       {/* 404 visual */}
       <div style={{ position: 'relative', marginBottom: 24 }}>

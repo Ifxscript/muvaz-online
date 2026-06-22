@@ -158,7 +158,7 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
     })
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className="min-h-screen bg-[#faf9f5] font-sans">
 
       {/* ── Sticky header ── */}
       <div className="sticky top-0 z-30 bg-white border-b border-zinc-200">

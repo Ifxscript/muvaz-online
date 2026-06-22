@@ -127,7 +127,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
   // ── Success screen ───────────────────────────────────────────
   if (submitted) {
     return (
-      <div className="min-h-screen bg-white font-sans flex flex-col items-center justify-center px-8 text-center">
+      <div className="min-h-screen bg-[#faf9f5] font-sans flex flex-col items-center justify-center px-8 text-center">
         <div className="w-16 h-16 rounded-full bg-zinc-100 border-2 border-zinc-900 flex items-center justify-center mb-6">
           <Check size={28} className="text-zinc-900" strokeWidth={2.5} />
         </div>
@@ -161,7 +161,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
 
   // ── Form ─────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className="min-h-screen bg-[#faf9f5] font-sans">
 
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white border-b border-zinc-200">
