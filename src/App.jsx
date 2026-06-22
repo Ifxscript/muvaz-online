@@ -13,6 +13,7 @@ import Admin from './pages/Admin.jsx'
 import { setToken, clearToken, authApi, listingsApi, normalizeListing, recordVisit } from './lib/api.js'
 import { Button } from './components/ui/button.jsx'
 import { Badge } from './components/ui/badge.jsx'
+import P5PeteAvatar from './components/P5PeteAvatar.jsx'
 import { Separator } from './components/ui/separator.jsx'
 import { Card, CardContent } from './components/ui/card.jsx'
 import ListCard from './components/ListCard.jsx'
@@ -326,9 +327,7 @@ export default function App() {
             {currentUser ? (
               <button onClick={() => navTo('profile')}
                 className="flex items-center gap-2 h-9 px-3 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm font-medium text-zinc-700">
-                <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
-                  {currentUser.name?.[0]?.toUpperCase() ?? 'U'}
-                </div>
+                <P5PeteAvatar displaySize={28} userId={currentUser.id ?? currentUser.email} />
                 {currentUser.name?.split(' ')[0]}
               </button>
             ) : (
@@ -397,6 +396,12 @@ export default function App() {
             <Plus size={14} strokeWidth={2.5} /> Post ad
           </button>
           <button
+            onClick={() => goBrowse({})}
+            className="shrink-0 h-9 px-4 rounded-full bg-[#faf9f5] border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
+          >
+            Browse items
+          </button>
+          <button
             onClick={() => goBrowse({ sort: 'Trending' })}
             className="shrink-0 h-9 px-4 rounded-full bg-[#faf9f5] border border-zinc-200 text-zinc-700 text-[13px] font-semibold hover:border-zinc-400 transition-colors"
           >
@@ -415,14 +420,14 @@ export default function App() {
       <section className="px-5 pb-8 md:px-8 max-w-screen-md mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold tracking-tight text-zinc-900">Top categories</h2>
-          <button onClick={() => goBrowse({})} className="text-sm font-semibold text-zinc-900 underline underline-offset-2">
-            See all
-          </button>
+          <Button variant="ghost" size="sm" className="text-zinc-500 gap-1 -mr-2" onClick={() => goBrowse({})}>
+            See all <ArrowRight size={13} />
+          </Button>
         </div>
         <div className="grid grid-cols-4 gap-x-3 gap-y-4">
           {CATEGORY_TILES.map(({ label, cat, Icon }) => (
             <button key={label} onClick={() => goBrowse({ cat })} className="flex flex-col items-center gap-2 group">
-              <span className="w-full aspect-square rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center group-hover:border-zinc-300 transition-colors">
+              <span className="w-full aspect-square rounded-2xl bg-[#faf9f5] border border-zinc-200 flex items-center justify-center group-hover:border-zinc-300 transition-colors">
                 <Icon size={22} className="text-zinc-800" strokeWidth={1.75} />
               </span>
               <span className="text-[12px] font-medium text-zinc-700">{label}</span>
@@ -573,7 +578,7 @@ export default function App() {
         <div className="md:hidden scroll-row flex gap-3.5 overflow-x-auto px-5 py-3 scroll-pl-5"
           style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
           {TESTIMONIALS.map(t => (
-            <Card key={t.name} className="w-[300px] shrink-0 border-zinc-200" style={{ scrollSnapAlign: 'start' }}>
+            <Card key={t.name} className="w-[300px] shrink-0 border-zinc-200 bg-[#faf9f5]" style={{ scrollSnapAlign: 'start' }}>
               <CardContent className="p-5">
                 <Stars size={13} />
                 <p className="text-sm text-zinc-700 leading-relaxed mt-3 mb-4">"{t.quote}"</p>
@@ -594,7 +599,7 @@ export default function App() {
         {/* Desktop: 3-col grid */}
         <div className="hidden md:grid md:grid-cols-3 gap-6 px-8">
           {TESTIMONIALS.map(t => (
-            <Card key={t.name} className="border-zinc-200">
+            <Card key={t.name} className="border-zinc-200 bg-[#faf9f5]">
               <CardContent className="p-8">
                 <Stars size={14} />
                 <p className="text-sm text-zinc-700 leading-relaxed mt-4 mb-6">"{t.quote}"</p>

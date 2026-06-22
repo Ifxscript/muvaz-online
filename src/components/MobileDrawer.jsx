@@ -1,6 +1,7 @@
 import { X, ChevronRight } from 'lucide-react'
 import { Button } from './ui/button.jsx'
 import { cn } from '../lib/utils.js'
+import P5PeteAvatar from './P5PeteAvatar.jsx'
 
 export default function MobileDrawer({ open, active, onClose, onNavigate, currentUser, onSignOut }) {
   const isAdmin = currentUser?.role === 'ADMIN'
@@ -44,9 +45,7 @@ export default function MobileDrawer({ open, active, onClose, onNavigate, curren
         {currentUser && (
           <div className="px-4 py-3 border-b border-zinc-100">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50">
-              <div className="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center text-sm font-bold shrink-0">
-                {currentUser.name?.[0]?.toUpperCase() ?? 'U'}
-              </div>
+              <P5PeteAvatar displaySize={40} userId={currentUser?.id ?? currentUser?.email} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-zinc-900 leading-none truncate">{currentUser.name}</p>
                 <p className="text-xs text-zinc-400 mt-0.5 truncate">{currentUser.email}</p>
@@ -90,14 +89,14 @@ export default function MobileDrawer({ open, active, onClose, onNavigate, curren
         {/* Footer CTA card */}
         <div className="p-4 border-t border-zinc-100 shrink-0">
           <div className="bg-zinc-900 rounded-lg p-4">
-            <p className="text-sm font-semibold text-white mb-0.5">Moving out?</p>
-            <p className="text-xs text-zinc-400 mb-3 leading-relaxed">We'll sell everything for you.</p>
+            <p className="text-sm font-semibold text-white mb-0.5">Have items you want to sell?</p>
+            <p className="text-xs text-zinc-400 mb-3 leading-relaxed">List it and reach buyers.</p>
             <Button
               size="sm"
               className="bg-[#faf9f5] text-zinc-900 hover:bg-zinc-100 gap-1.5"
               onClick={() => { onNavigate?.('List an item'); onClose() }}
             >
-              Book a pickup <ChevronRight size={13} />
+              List an item <ChevronRight size={13} />
             </Button>
           </div>
         </div>

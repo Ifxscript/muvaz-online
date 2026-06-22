@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import P5PeteAvatar from '../components/P5PeteAvatar.jsx'
 import { Separator } from '../components/ui/separator.jsx'
 import ListCard from '../components/ListCard.jsx'
 import { CONDITION_LABEL } from '../lib/constants.js'
@@ -357,12 +358,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, currentUser }) 
         <button onClick={() => onNavigate('home')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', padding: 6, borderRadius: mRadiusSm }}>
           <MChevLeft size={20} stroke={mText} />
         </button>
-        <div style={{
-          width: 32, height: 32, borderRadius: '50%',
-          background: mText, color: '#fff',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: mFont, fontWeight: 800, fontSize: 14, flexShrink: 0,
-        }}>{currentUser?.name?.[0]?.toUpperCase() ?? 'U'}</div>
+        <P5PeteAvatar displaySize={40} userId={currentUser?.id ?? currentUser?.email} />
         <span style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText }}>{currentUser?.name ?? 'My profile'}</span>
       </div>
 
