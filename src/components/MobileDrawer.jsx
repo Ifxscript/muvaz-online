@@ -45,7 +45,7 @@ export default function MobileDrawer({ open, active, onClose, onNavigate, curren
         {currentUser && (
           <div className="px-4 py-3 border-b border-zinc-100">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50">
-              <P5PeteAvatar displaySize={48} userId={currentUser?.id ?? currentUser?.email} />
+              <P5PeteAvatar displaySize={72} userId={currentUser?.id ?? currentUser?.email} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-zinc-900 leading-none truncate">{currentUser.name}</p>
                 <p className="text-xs text-zinc-400 mt-0.5 truncate">{currentUser.email}</p>

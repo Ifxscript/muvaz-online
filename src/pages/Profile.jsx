@@ -383,7 +383,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, onUpdateUser, c
         <button onClick={() => onNavigate('home')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', padding: 6, borderRadius: mRadiusSm }}>
           <MChevLeft size={20} stroke={mText} />
         </button>
-        <P5PeteAvatar displaySize={52} userId={currentUser?.id ?? currentUser?.email} />
+        <P5PeteAvatar displaySize={90} userId={currentUser?.id ?? currentUser?.email} />
         <span style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText }}>{currentUser?.name ?? 'My profile'}</span>
       </div>
 

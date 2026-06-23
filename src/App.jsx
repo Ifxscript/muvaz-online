@@ -336,7 +336,7 @@ export default function App() {
             {currentUser ? (
               <button onClick={() => navTo('profile')}
                 className="flex items-center gap-2 h-9 px-3 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm font-medium text-zinc-700">
-                <P5PeteAvatar displaySize={34} userId={currentUser.id ?? currentUser.email} />
+                <P5PeteAvatar displaySize={44} userId={currentUser.id ?? currentUser.email} />
                 {currentUser.name?.split(' ')[0]}
               </button>
             ) : (
@@ -351,7 +351,7 @@ export default function App() {
             className="md:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-zinc-100 transition-colors"
           >
             {currentUser
-              ? <P5PeteAvatar displaySize={38} userId={currentUser.id ?? currentUser.email} />
+              ? <P5PeteAvatar displaySize={48} userId={currentUser.id ?? currentUser.email} />
               : <Menu size={20} />}
           </button>
         </div>
