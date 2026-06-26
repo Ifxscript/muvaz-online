@@ -14,6 +14,8 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
   const [showPass, setShowPass] = useState(false)
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState('')
+  const [resending, setResending] = useState(false)
+  const [resent,    setResent]    = useState(false)
 
   // form fields
   const [name,     setName]     = useState('')
@@ -33,7 +35,21 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
     }
   }, [pendingGoogleUser])
 
-  const switchTab = t => { setTab(t); setStep('form'); setError(''); setNotice(null) }
+  const switchTab = t => { setTab(t); setStep('form'); setError(''); setNotice(null); setResent(false) }
+
+  const handleResend = async () => {
+    if (!email || resending || resent) return
+    setResending(true)
+    try {
+      await authApi.resendVerification(email)
+      setResent(true)
+    } catch (_) {
+      // silently ignore — backend always returns 200
+      setResent(true)
+    } finally {
+      setResending(false)
+    }
+  }
   const fullPhone = () => `${country}${phone.replace(/^0/, '')}`
 
   // ── Sign in ───────────────────────────────────────────────────────────────
@@ -105,7 +121,20 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
         <p className="text-sm text-zinc-500 leading-relaxed mb-1 max-w-xs">
           We sent a verification link to <strong className="text-zinc-900">{email}</strong>.
         </p>
-        <p className="text-xs text-zinc-400 mb-8">Click the link to activate your account, then sign in. It may take a minute to arrive.</p>
+        <p className="text-xs text-zinc-400 mb-6">Click the link to activate your account, then sign in. It may take a minute to arrive.</p>
+
+        {resent ? (
+          <p className="text-sm text-green-600 font-medium mb-4">Email resent — check your inbox (and spam folder).</p>
+        ) : (
+          <button
+            onClick={handleResend}
+            disabled={resending}
+            className="text-sm text-[#D97757] font-medium underline underline-offset-2 mb-4 disabled:opacity-50 cursor-pointer"
+          >
+            {resending ? 'Sending…' : "Didn't get it? Resend"}
+          </button>
+        )}
+
         <Button variant="outline" className="w-full max-w-xs h-12" onClick={() => switchTab('signin')}>
           Back to sign in
         </Button>
@@ -227,7 +256,19 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
               </button>
             </Field>
 
-            {error && <p className="text-xs text-red-500 -mt-1">{error}</p>}
+            {error && (
+              <div className="-mt-1">
+                <p className="text-xs text-red-500">{error}</p>
+                {error.toLowerCase().includes('verify') && (
+                  resent
+                    ? <p className="text-xs text-green-600 mt-1">Verification email resent — check your inbox.</p>
+                    : <button onClick={handleResend} disabled={resending}
+                        className="text-xs text-[#D97757] underline underline-offset-2 mt-1 disabled:opacity-50 cursor-pointer">
+                        {resending ? 'Sending…' : 'Resend verification email'}
+                      </button>
+                )}
+              </div>
+            )}
 
             <Button className="w-full h-12 text-base bg-[#D97757] hover:bg-[#c96848] text-white border-0 mt-1" disabled={loading} onClick={handleSignIn}>
               {loading ? 'Signing in…' : 'Sign in'}

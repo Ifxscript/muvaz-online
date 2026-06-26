@@ -53,10 +53,11 @@ export const api = {
 export const recordVisit = () => request('GET', '/visit').catch(() => {})
 
 export const authApi = {
-  register:        body => api.post('/auth/register', body),
-  login:           body => api.post('/auth/login', body),
-  me:              ()   => api.get('/auth/me'),
-  completeProfile: body => api.patch('/auth/me/profile', body),
+  register:             body  => api.post('/auth/register', body),
+  login:                body  => api.post('/auth/login', body),
+  me:                   ()    => api.get('/auth/me'),
+  completeProfile:      body  => api.patch('/auth/me/profile', body),
+  resendVerification:   email => api.post(`/auth/resend-verification?email=${encodeURIComponent(email)}`),
 }
 
 // ── Listings ──────────────────────────────────────────────────────────────────
