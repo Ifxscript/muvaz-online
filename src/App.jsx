@@ -13,7 +13,7 @@ import Admin from './pages/Admin.jsx'
 import { setToken, clearToken, authApi, listingsApi, normalizeListing, recordVisit } from './lib/api.js'
 import { Button } from './components/ui/button.jsx'
 
-import P5PeteAvatar from './components/P5PeteAvatar.jsx'
+import Avatar from 'boring-avatars'
 import { Separator } from './components/ui/separator.jsx'
 import { Card, CardContent } from './components/ui/card.jsx'
 import ListCard from './components/ListCard.jsx'
@@ -336,7 +336,7 @@ export default function App() {
             {currentUser ? (
               <button onClick={() => navTo('profile')}
                 className="flex items-center gap-2 h-9 px-3 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm font-medium text-zinc-700">
-                <P5PeteAvatar displaySize={44} userId={currentUser.id ?? currentUser.email} />
+                <Avatar size={44} name={String(currentUser.id ?? currentUser.email)} variant="beam" colors={["#00686c","#32c2b9","#edecb3","#fad928","#ff9915"]} />
                 {currentUser.name?.split(' ')[0]}
               </button>
             ) : (
@@ -351,7 +351,7 @@ export default function App() {
             className="md:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-zinc-100 transition-colors"
           >
             {currentUser
-              ? <P5PeteAvatar displaySize={48} userId={currentUser.id ?? currentUser.email} />
+              ? <Avatar size={48} name={String(currentUser.id ?? currentUser.email)} variant="beam" colors={["#00686c","#32c2b9","#edecb3","#fad928","#ff9915"]} />
               : <Menu size={20} />}
           </button>
         </div>

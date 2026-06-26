@@ -1,7 +1,7 @@
 import { X, ChevronRight } from 'lucide-react'
 import { Button } from './ui/button.jsx'
 import { cn } from '../lib/utils.js'
-import P5PeteAvatar from './P5PeteAvatar.jsx'
+import Avatar from 'boring-avatars'
 
 export default function MobileDrawer({ open, active, onClose, onNavigate, currentUser, onSignOut }) {
   const isAdmin = currentUser?.role === 'ADMIN'
@@ -45,7 +45,7 @@ export default function MobileDrawer({ open, active, onClose, onNavigate, curren
         {currentUser && (
           <div className="px-4 py-3 border-b border-zinc-100">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50">
-              <P5PeteAvatar displaySize={72} userId={currentUser?.id ?? currentUser?.email} />
+              <Avatar size={72} name={String(currentUser?.id ?? currentUser?.email ?? '')} variant="beam" colors={["#00686c","#32c2b9","#edecb3","#fad928","#ff9915"]} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-zinc-900 leading-none truncate">{currentUser.name}</p>
                 <p className="text-xs text-zinc-400 mt-0.5 truncate">{currentUser.email}</p>

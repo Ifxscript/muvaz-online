@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import P5PeteAvatar from '../components/P5PeteAvatar.jsx'
+import Avatar from 'boring-avatars'
 import { Separator } from '../components/ui/separator.jsx'
 import ListCard from '../components/ListCard.jsx'
 import { CONDITION_LABEL } from '../lib/constants.js'
@@ -383,7 +383,7 @@ export default function Profile({ onNavigate, onEdit, onSignOut, onUpdateUser, c
         <button onClick={() => onNavigate('home')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', padding: 6, borderRadius: mRadiusSm }}>
           <MChevLeft size={20} stroke={mText} />
         </button>
-        <P5PeteAvatar displaySize={90} userId={currentUser?.id ?? currentUser?.email} />
+        <Avatar size={90} name={String(currentUser?.id ?? currentUser?.email ?? '')} variant="beam" colors={["#00686c","#32c2b9","#edecb3","#fad928","#ff9915"]} />
         <span style={{ fontFamily: mFont, fontSize: 16, fontWeight: 700, color: mText }}>{currentUser?.name ?? 'My profile'}</span>
       </div>
 
