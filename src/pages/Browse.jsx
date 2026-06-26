@@ -8,12 +8,11 @@ import ItemPage from './ItemPage.jsx'
 import { MyAdvertPage } from './Profile.jsx'
 import { cn } from '../lib/utils.js'
 import { listingsApi, normalizeListing } from '../lib/api.js'
-import { CONDITION_LABEL } from '../lib/constants.js'
+import { CONDITION_LABEL, NIGERIA_STATES, STATE_LGAS } from '../lib/constants.js'
 
-const CATS    = ['All', 'Furniture', 'Electronics', 'Clothing', 'Sports', 'Kitchen', 'Other']
-const REGIONS = ['All', 'Garki', 'Wuse', 'Maitama', 'Asokoro', 'Gwarinpa', 'Kubwa', 'Lugbe', 'Kado', 'Jabi', 'Utako']
-const CONDS   = ['All', 'LIKE_NEW', 'GREAT', 'GOOD', 'FAIR']
-const SORTS   = ['Nearest', 'Trending', 'Lowest price', 'Highest price', 'Newest']
+const CATS  = ['All', 'Furniture', 'Electronics', 'Clothing', 'Sports', 'Kitchen', 'Other']
+const CONDS = ['All', 'LIKE_NEW', 'GREAT', 'GOOD', 'FAIR']
+const SORTS = ['Nearest', 'Trending', 'Lowest price', 'Highest price', 'Newest']
 
 function imageRatio(index) {
   const r = index % 3
@@ -71,12 +70,14 @@ function Sheet({ open, onClose, title, children }) {
 
 // ── Browse page ───────────────────────────────────────────────────────────────
 
-export default function Browse({ onBack, requireAuth, currentUser, onEdit, initialQuery = '', initialSort = null, initialCat = 'All', onConsumeInitial }) {
+export default function Browse({ onBack, requireAuth, currentUser, onEdit, initialQuery = '', initialSort = null, initialCat = 'All', initialState = 'Abuja (FCT)', onConsumeInitial }) {
   const [query,       setQuery]       = useState(initialQuery)
   const [cat,         setCat]         = useState(initialCat)
   const [sort,        setSort]        = useState(initialSort ?? 'Nearest')
   const [grid,        setGrid]        = useState(2)
   const [filterOpen,  setFilterOpen]  = useState(false)
+  const [state,        setState]        = useState(initialState)
+  const [draftState,   setDraftState]   = useState(initialState)
   const [draftRegion, setDraftRegion] = useState('All')
   const [draftCond,    setDraftCond]    = useState('All')
   const [draftSort,    setDraftSort]    = useState('Nearest')
@@ -133,11 +134,13 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
     return <ItemPage item={selectedItem} allItems={items} onBack={closeItem} onSelectItem={openItem} requireAuth={requireAuth} />
   }
 
+  const lgas = ['All', ...(STATE_LGAS[state] ?? [])]
+
   const activeFilters = (region !== 'All' ? 1 : 0) + (cond !== 'All' ? 1 : 0) + (sort !== 'Nearest' ? 1 : 0)
 
-  const openFilter  = () => { setDraftRegion(region); setDraftCond(cond); setDraftSort(sort); setFilterOpen(true) }
-  const applyFilter = () => { setRegion(draftRegion); setCond(draftCond); setSort(draftSort); setFilterOpen(false) }
-  const clearFilter = () => { setDraftRegion('All'); setDraftCond('All'); setDraftSort('Nearest') }
+  const openFilter  = () => { setDraftState(state); setDraftRegion(region); setDraftCond(cond); setDraftSort(sort); setFilterOpen(true) }
+  const applyFilter = () => { setState(draftState); setRegion(draftRegion); setCond(draftCond); setSort(draftSort); setFilterOpen(false) }
+  const clearFilter = () => { setDraftState(initialState); setDraftRegion('All'); setDraftCond('All'); setDraftSort('Nearest') }
 
   const filtered = items
     .filter(item => {
@@ -242,9 +245,24 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
           <Separator />
 
           <div>
-            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Region</p>
+            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">State</p>
+            <div className="flex flex-col gap-0.5 max-h-44 overflow-y-auto">
+              {NIGERIA_STATES.map(s => (
+                <button key={s} onClick={() => { setState(s); setRegion('All') }}
+                  className={cn('w-full flex items-center justify-between px-2 py-2 rounded-md text-sm transition-colors shrink-0', state === s ? 'bg-zinc-100 font-semibold text-zinc-900' : 'text-zinc-500 hover:bg-zinc-50')}>
+                  {s.replace(' (FCT)', '')}
+                  {state === s && <Check size={14} className="text-zinc-900" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Area / LGA</p>
             <div className="flex flex-col gap-0.5">
-              {REGIONS.map(r => (
+              {lgas.map(r => (
                 <button key={r} onClick={() => setRegion(r)}
                   className={cn('w-full flex items-center justify-between px-2 py-2 rounded-md text-sm transition-colors', region === r ? 'bg-zinc-100 font-semibold text-zinc-900' : 'text-zinc-500 hover:bg-zinc-50')}>
                   {r}
@@ -406,9 +424,24 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
 
         <Separator className="mb-6" />
 
-        <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Region</p>
+        <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">State</p>
+        <div className="flex flex-col mb-6">
+          {NIGERIA_STATES.map(s => (
+            <button key={s} onClick={() => { setDraftState(s); setDraftRegion('All') }}
+              className="flex items-center justify-between py-3 border-b border-zinc-100 last:border-0">
+              <span className={cn('text-[15px]', draftState === s ? 'font-semibold text-zinc-900' : 'text-zinc-500')}>
+                {s.replace(' (FCT)', '')}
+              </span>
+              {draftState === s && <Check size={16} className="text-zinc-900" />}
+            </button>
+          ))}
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Area / LGA</p>
         <div className="flex flex-wrap gap-2 mb-6">
-          {REGIONS.map(r => (
+          {['All', ...(STATE_LGAS[draftState] ?? [])].map(r => (
             <Chip key={r} active={draftRegion === r} onClick={() => setDraftRegion(r)}>{r}</Chip>
           ))}
         </div>

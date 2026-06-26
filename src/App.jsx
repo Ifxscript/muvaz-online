@@ -11,6 +11,7 @@ import NotFound from './pages/NotFound.jsx'
 import ItemPage from './pages/ItemPage.jsx'
 import Admin from './pages/Admin.jsx'
 import { setToken, clearToken, authApi, listingsApi, normalizeListing, recordVisit } from './lib/api.js'
+import { NIGERIA_STATES } from './lib/constants.js'
 import { Button } from './components/ui/button.jsx'
 
 import Avatar from 'boring-avatars'
@@ -28,12 +29,6 @@ const TESTIMONIALS = [
   { quote: 'Listed my old AC and generator before moving office. Both sold in 3 days. Super smooth.',  name: 'Emeka O.',  role: 'Wuse 2, Abuja',   initial: 'E' },
   { quote: 'Got ₦85k for stuff I was going to throw away. Buyer came straight to my house.',          name: 'Fatima A.', role: 'Gwarinpa, Abuja', initial: 'F' },
   { quote: 'No stress, no random calls. Buyer saw it, liked it, paid securely through the app.',       name: 'Chidi N.',  role: 'Garki, Abuja',    initial: 'C' },
-]
-
-const STATS = [
-  { value: '2,400+',  label: 'Items sold' },
-  { value: '₦180M+', label: 'Paid to sellers' },
-  { value: 'Abuja',   label: 'Currently serving' },
 ]
 
 const STEPS = [
@@ -100,6 +95,15 @@ export default function App() {
   const [browseQuery,    setBrowseQuery]    = useState('')      // seed query passed into Browse
   const [browseSort,     setBrowseSort]     = useState(null)    // seed sort passed into Browse
   const [browseCat,      setBrowseCat]      = useState('All')   // seed category passed into Browse
+  const [selectedState,  setSelectedState]  = useState('Abuja (FCT)')
+  const [stateDropOpen,  setStateDropOpen]  = useState(false)
+  const stateDropRef = useRef(null)
+  useEffect(() => {
+    if (!stateDropOpen) return
+    const handler = e => { if (stateDropRef.current && !stateDropRef.current.contains(e.target)) setStateDropOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [stateDropOpen])
 
   // ── On mount: restore session + handle OAuth callback ───────────────────────
   useEffect(() => {
@@ -276,7 +280,7 @@ export default function App() {
     onSuccess={user => { setCurrentUser(user); setPendingGoogleUser(null); historyRef.current = []; setPage('home') }}
   />
 
-  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} currentUser={currentUser} onEdit={item => navTo('edit', { editItem: item })} initialQuery={browseQuery} initialSort={browseSort} initialCat={browseCat} onConsumeInitial={() => { setBrowseQuery(''); setBrowseSort(null); setBrowseCat('All') }} />
+  if (page === 'browse')  return <Browse onBack={navBack} requireAuth={requireAuth} currentUser={currentUser} onEdit={item => navTo('edit', { editItem: item })} initialQuery={browseQuery} initialSort={browseSort} initialCat={browseCat} initialState={selectedState} onConsumeInitial={() => { setBrowseQuery(''); setBrowseSort(null); setBrowseCat('All') }} />
   if (page === 'auth')    return <Auth
     onBack={navBack}
     pendingGoogleUser={pendingGoogleUser}
@@ -336,7 +340,7 @@ export default function App() {
             {currentUser ? (
               <button onClick={() => navTo('profile')}
                 className="flex items-center gap-2 h-9 px-3 rounded-full border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm font-medium text-zinc-700">
-                <Avatar size={44} name={String(currentUser.id ?? currentUser.email)} variant="beam" colors={["#00686c","#32c2b9","#edecb3","#fad928","#ff9915"]} />
+                <Avatar size={24} name={String(currentUser.id ?? currentUser.email)} variant="beam" colors={["#00686c","#32c2b9","#edecb3","#fad928","#ff9915"]} />
                 {currentUser.name?.split(' ')[0]}
               </button>
             ) : (
@@ -401,9 +405,29 @@ export default function App() {
             className="flex-1 min-w-0 bg-transparent outline-none text-[15px] text-zinc-900 placeholder:text-zinc-400"
           />
           <span className="w-px h-5 bg-zinc-300 shrink-0" />
-          <span className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 shrink-0 select-none">
-            Abuja <ChevronDown size={14} className="text-zinc-500" />
-          </span>
+          <div ref={stateDropRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setStateDropOpen(v => !v)}
+              className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 select-none"
+            >
+              {selectedState.replace(' (FCT)', '')}
+              <ChevronDown size={14} className="text-zinc-500" />
+            </button>
+            {stateDropOpen && (
+              <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-zinc-200 z-50 max-h-64 overflow-y-auto">
+                {NIGERIA_STATES.map(s => (
+                  <button
+                    key={s} type="button"
+                    onClick={() => { setSelectedState(s); setStateDropOpen(false) }}
+                    className={`w-full text-left px-4 py-2.5 text-sm first:rounded-t-xl last:rounded-b-xl hover:bg-zinc-50 ${selectedState === s ? 'font-semibold text-zinc-900' : 'text-zinc-600'}`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </form>
 
         {/* Quick actions */}
@@ -454,18 +478,6 @@ export default function App() {
           ))}
         </div>
       </section>
-
-      {/* ── Stats strip — desktop only ── */}
-      <div className="hidden md:block border-y border-zinc-200 bg-[#faf9f5]">
-        <div className="max-w-screen-xl mx-auto grid grid-cols-3 divide-x divide-zinc-200">
-          {STATS.map(s => (
-            <div key={s.label} className="flex flex-col items-center justify-center py-6 px-3 text-center gap-0.5">
-              <span className="text-3xl font-black text-zinc-900 tracking-tight">{s.value}</span>
-              <span className="text-sm text-zinc-500 font-medium">{s.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* ── Listed in Abuja ── */}
       <section className="pt-6 pb-12 md:py-16 max-w-screen-xl mx-auto">
