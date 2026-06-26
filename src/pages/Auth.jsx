@@ -64,7 +64,11 @@ export default function Auth({ onBack, onSuccess, pendingGoogleUser, verifiedNot
       if (!data.user.profileComplete) { setGoogleUser(data.user); setStep('phone'); return }
       onSuccess(data.user)
     } catch (e) {
-      setError(e.message)
+      if (e.message?.toLowerCase().includes('verify')) {
+        setStep('verify-email')
+      } else {
+        setError(e.message)
+      }
     } finally {
       setLoading(false)
     }
