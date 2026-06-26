@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import { ArrowLeft, Search, X, SlidersHorizontal, LayoutGrid, AlignJustify, Check, Star } from 'lucide-react'
+import { ArrowLeft, Search, X, SlidersHorizontal, LayoutGrid, AlignJustify, Check, Star, ChevronDown } from 'lucide-react'
 import { Button } from '../components/ui/button.jsx'
 import { Badge } from '../components/ui/badge.jsx'
 import { Separator } from '../components/ui/separator.jsx'
@@ -8,9 +8,9 @@ import ItemPage from './ItemPage.jsx'
 import { MyAdvertPage } from './Profile.jsx'
 import { cn } from '../lib/utils.js'
 import { listingsApi, normalizeListing } from '../lib/api.js'
-import { CONDITION_LABEL, NIGERIA_STATES, STATE_LGAS } from '../lib/constants.js'
+import { CONDITION_LABEL, NIGERIA_STATES, STATE_LGAS, CATEGORIES } from '../lib/constants.js'
 
-const CATS  = ['All', 'Furniture', 'Electronics', 'Clothing', 'Sports', 'Kitchen', 'Other']
+const MAIN_CATS = ['All', 'Furniture', 'Electronics', 'Clothing & Shoes', 'Sports & Fitness', 'Kitchen']
 const CONDS = ['All', 'LIKE_NEW', 'GREAT', 'GOOD', 'FAIR']
 const SORTS = ['Nearest', 'Trending', 'Lowest price', 'Highest price', 'Newest']
 
@@ -78,6 +78,15 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
   const [filterOpen,  setFilterOpen]  = useState(false)
   const [state,        setState]        = useState(initialState)
   const [draftState,   setDraftState]   = useState(initialState)
+  const [showAllCats,  setShowAllCats]  = useState(false)
+  const [searchStateDropOpen, setSearchStateDropOpen] = useState(false)
+  const searchStateDropRef = useRef(null)
+  useEffect(() => {
+    if (!searchStateDropOpen) return
+    const handler = e => { if (searchStateDropRef.current && !searchStateDropRef.current.contains(e.target)) setSearchStateDropOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [searchStateDropOpen])
   const [draftRegion, setDraftRegion] = useState('All')
   const [draftCond,    setDraftCond]    = useState('All')
   const [draftSort,    setDraftSort]    = useState('Nearest')
@@ -175,20 +184,42 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
             <ArrowLeft size={20} className="text-zinc-700" />
           </button>
 
-          <div className="flex-1 flex items-center gap-2 h-10 px-3 rounded-lg bg-[#f0efe9] border border-zinc-200">
-            <Search size={15} className="text-zinc-400 shrink-0" />
+          <div className="flex-1 flex items-center gap-3 h-14 px-4 rounded-2xl bg-[#f0efe9] border border-zinc-200 focus-within:border-zinc-400 transition-colors">
+            <Search size={18} className="text-zinc-500 shrink-0" />
             <input
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search items…"
-              className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none"
+              className="flex-1 bg-transparent text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
             {query && (
               <button onClick={() => setQuery('')} className="flex shrink-0">
                 <X size={14} className="text-zinc-400" />
               </button>
             )}
+            <span className="w-px h-5 bg-zinc-300 shrink-0" />
+            <div ref={searchStateDropRef} className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => setSearchStateDropOpen(v => !v)}
+                className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 select-none"
+              >
+                {state.replace(' (FCT)', '')}
+                <ChevronDown size={14} className="text-zinc-500" />
+              </button>
+              {searchStateDropOpen && (
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-zinc-200 z-50 max-h-64 overflow-y-auto">
+                  {NIGERIA_STATES.map(s => (
+                    <button key={s} type="button"
+                      onClick={() => { setState(s); setRegion('All'); setSearchStateDropOpen(false) }}
+                      className={`w-full text-left px-4 py-2.5 text-sm first:rounded-t-xl last:rounded-b-xl hover:bg-zinc-50 ${state === s ? 'font-semibold text-zinc-900' : 'text-zinc-600'}`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <button
@@ -219,9 +250,24 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
 
           <div className="md:hidden w-px h-8 bg-zinc-200 shrink-0 self-center" />
 
-          {CATS.map(c => (
+          {(showAllCats ? ['All', ...CATEGORIES] : MAIN_CATS).map(c => (
             <Chip key={c} active={cat === c} onClick={() => setCat(c)}>{c}</Chip>
           ))}
+          {!showAllCats ? (
+            <button
+              onClick={() => setShowAllCats(true)}
+              className="h-8 px-3.5 rounded-full text-[13px] font-medium shrink-0 border bg-[#faf9f5] text-zinc-500 border-zinc-200 hover:border-zinc-400 transition-colors whitespace-nowrap"
+            >
+              More ›
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowAllCats(false)}
+              className="h-8 px-3.5 rounded-full text-[13px] font-medium shrink-0 border bg-[#faf9f5] text-zinc-500 border-zinc-200 hover:border-zinc-400 transition-colors whitespace-nowrap"
+            >
+              Less
+            </button>
+          )}
           <div className="w-3 shrink-0" />
         </div>
       </div>
