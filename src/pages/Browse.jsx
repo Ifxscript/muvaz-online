@@ -174,6 +174,14 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
       }
     })
 
+  const draftFilteredCount = items.filter(item => {
+    if (query && !item.title.toLowerCase().includes(query.toLowerCase())) return false
+    if (cat !== 'All' && item.cat !== cat) return false
+    if (draftRegion !== 'All' && item.region !== draftRegion) return false
+    if (draftCond !== 'All' && item.condition !== draftCond) return false
+    return true
+  }).length
+
   return (
     <div className="min-h-screen bg-[#faf9f5] font-sans">
 
@@ -477,7 +485,7 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
         </div>
 
         <Button className="w-full h-12 text-base" onClick={applyFilter}>
-          Show {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+          Show {draftFilteredCount} result{draftFilteredCount !== 1 ? 's' : ''}
         </Button>
       </Sheet>
 

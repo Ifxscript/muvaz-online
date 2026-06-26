@@ -131,10 +131,14 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
           {/* Price + location + rating */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-6">
             <span className="text-3xl font-black text-zinc-900 tracking-tight">₦{item.price}</span>
-            <span className="flex items-center gap-1 text-zinc-400">
-              <MapPin size={13} />
-              <span className="text-sm">{item.region}</span>
-            </span>
+            {(item.lga || item.state) && (
+              <span className="flex items-center gap-1 text-zinc-400">
+                <MapPin size={13} />
+                <span className="text-sm">
+                  {item.lga && item.state ? `${item.lga}, ${item.state}` : item.state || item.lga}
+                </span>
+              </span>
+            )}
             <span className="flex items-center gap-1">
               <Star size={13} fill="#18181b" stroke="none" />
               <span className="text-sm font-semibold text-zinc-900">{item.rating}</span>
@@ -147,7 +151,7 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
 
           {/* Tag pills */}
           <div className="flex gap-2 flex-wrap mb-6">
-            {[item.cat, CONDITION_LABEL[item.condition] ?? item.condition, item.region].map(tag => (
+            {[item.cat, CONDITION_LABEL[item.condition] ?? item.condition, item.lga, item.state].filter(Boolean).map(tag => (
               <span
                 key={tag}
                 className="text-xs font-medium text-zinc-500 bg-zinc-100 rounded-full px-3 py-1"
