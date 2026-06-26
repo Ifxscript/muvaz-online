@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react'
-import { ArrowLeft, Camera, Plus, X, MapPin, Check, Loader2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { ArrowLeft, Camera, Plus, X, MapPin, Check, Loader2, ChevronDown } from 'lucide-react'
 import { Button } from '../components/ui/button.jsx'
 import { Separator } from '../components/ui/separator.jsx'
 import { cn } from '../lib/utils.js'
-import { CATEGORIES, CONDITIONS } from '../lib/constants.js'
-import { listingsApi } from '../lib/api.js'
+import { CATEGORIES, NIGERIA_STATES, STATE_LGAS } from '../lib/constants.js'
+import { listingsApi, categoryApi } from '../lib/api.js'
 
 // ── Small helpers ─────────────────────────────────────────────
 
@@ -39,23 +39,58 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
   const isEdit       = Boolean(initialItem)
   const fileInputRef = useRef(null)
 
-  // Each entry: { file: File | null, preview: string, uploaded: boolean }
-  // - New files:       { file: File, preview: blobURL, uploaded: false }
-  // - Existing images: { file: null, preview: 'https://...', uploaded: true }
-  const [files,       setFiles]       = useState(
+  const [files,         setFiles]         = useState(
     isEdit && initialItem?.images?.length
       ? initialItem.images.map(url => ({ file: null, preview: url, uploaded: true }))
       : []
   )
-  const [category,    setCategory]    = useState(initialItem?.cat ?? '')
-  const [condition,   setCondition]   = useState(initialItem?.condition ?? '')
-  const [title,       setTitle]       = useState(initialItem?.title ?? '')
-  const [desc,        setDesc]        = useState(initialItem?.description ?? '')
-  const [price,       setPrice]       = useState(initialItem?.price ? String(initialItem.price) : '')
-  const [postcode,    setPostcode]    = useState('')
-  const [submitted,   setSubmitted]   = useState(false)
-  const [submitting,  setSubmitting]  = useState(false)
-  const [submitError, setSubmitError] = useState('')
+  const [category,      setCategory]      = useState(initialItem?.cat ?? '')
+  const [condition,     setCondition]     = useState(initialItem?.condition ?? '')
+  const [title,         setTitle]         = useState(initialItem?.title ?? '')
+  const [desc,          setDesc]          = useState(initialItem?.description ?? '')
+  const [price,         setPrice]         = useState(initialItem?.price ? String(initialItem.price) : '')
+  const [listingState,  setListingState]  = useState(initialItem?.state ?? 'Abuja (FCT)')
+  const [listingLga,    setListingLga]    = useState(initialItem?.lga ?? '')
+  const [address,       setAddress]       = useState(initialItem?.address ?? '')
+  const [submitted,     setSubmitted]     = useState(false)
+  const [submitting,    setSubmitting]    = useState(false)
+  const [submitError,   setSubmitError]   = useState('')
+  const [apiCategories, setApiCategories] = useState([])
+
+  // State dropdown
+  const [stateDropOpen, setStateDropOpen] = useState(false)
+  const stateDropRef = useRef(null)
+  useEffect(() => {
+    if (!stateDropOpen) return
+    const handler = e => { if (stateDropRef.current && !stateDropRef.current.contains(e.target)) setStateDropOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [stateDropOpen])
+
+  // LGA dropdown
+  const [lgaDropOpen, setLgaDropOpen] = useState(false)
+  const lgaDropRef = useRef(null)
+  useEffect(() => {
+    if (!lgaDropOpen) return
+    const handler = e => { if (lgaDropRef.current && !lgaDropRef.current.contains(e.target)) setLgaDropOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [lgaDropOpen])
+
+  // Fetch categories from API; fall back to constants if empty
+  useEffect(() => {
+    categoryApi.getAll()
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setApiCategories(data.map(c => c.name))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const cats = apiCategories.length > 0 ? apiCategories : CATEGORIES
+  const lgaOptions = STATE_LGAS[listingState] ?? []
+  const lgaRequired = lgaOptions.length > 0
 
   const pickFile = () => fileInputRef.current?.click()
 
@@ -85,14 +120,15 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
   }
 
   const canSubmit = title.trim() && category && condition && price && Number(price) > 0
-  const payout    = price ? (Number(price) * 0.95).toFixed(2) : null
+    && listingState && (!lgaRequired || listingLga)
+
+  const payout = price ? (Number(price) * 0.95).toFixed(2) : null
 
   const handleSubmit = async () => {
     if (!canSubmit || submitting) return
     setSubmitting(true)
     setSubmitError('')
     try {
-      // Upload any new (not-yet-uploaded) files
       const imageUrls = await Promise.all(
         files.map(async f => {
           if (f.uploaded) return f.preview
@@ -107,6 +143,9 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
         price: Number(price),
         condition,
         category,
+        state: listingState,
+        lga: listingLga || null,
+        address: address.trim() || null,
         images: imageUrls,
       }
 
@@ -146,7 +185,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
           {!isEdit && (
             <Button className="w-full h-12" onClick={() => {
               setSubmitted(false); setTitle(''); setCategory(''); setCondition('')
-              setDesc(''); setPrice(''); setPostcode(''); setSubmitError(''); resetFiles()
+              setDesc(''); setPrice(''); setListingLga(''); setAddress(''); setSubmitError(''); resetFiles()
             }}>
               List another item
             </Button>
@@ -185,7 +224,6 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
         <section>
           <SectionTitle sub="Up to 8 photos. First photo becomes the cover.">Photos</SectionTitle>
 
-          {/* Hidden file input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -243,7 +281,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
         <section>
           <SectionTitle sub="Pick the best fit for your item.">Category</SectionTitle>
           <div className="grid grid-cols-3 gap-2">
-            {CATEGORIES.map(cat => (
+            {cats.map(cat => (
               <button
                 key={cat}
                 onClick={() => setCategory(cat)}
@@ -291,7 +329,7 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
               Condition <span className="text-zinc-400">*</span>
             </label>
             <div className="flex gap-2 flex-wrap">
-              {CONDITIONS.map(c => (
+              {[{ value: 'LIKE_NEW', label: 'Like new' }, { value: 'GREAT', label: 'Great' }, { value: 'GOOD', label: 'Good' }, { value: 'FAIR', label: 'Fair' }].map(c => (
                 <Pill key={c.value} active={condition === c.value} onClick={() => setCondition(c.value)}>{c.label}</Pill>
               ))}
             </div>
@@ -349,18 +387,99 @@ export default function Upload({ onBack, onSuccess, initialItem }) {
 
         {/* ── Location ── */}
         <section>
-          <SectionTitle sub="Our team collects from you — buyers never see your address.">
+          <SectionTitle sub="Our team collects from you — buyers never see your full address.">
             Pickup location
           </SectionTitle>
-          <div className="flex items-center gap-2 h-12 px-3 rounded-md border border-zinc-200 bg-[#f0efe9] focus-within:border-zinc-900 transition-colors">
-            <MapPin size={16} className="text-zinc-400 shrink-0" />
-            <input
-              type="text"
-              value={postcode}
-              onChange={e => setPostcode(e.target.value)}
-              placeholder="Enter your postcode"
-              className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400"
-            />
+
+          <div className="space-y-3">
+            {/* State */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                State <span className="text-[#D97757]">*</span>
+              </label>
+              <div ref={stateDropRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setStateDropOpen(v => !v)}
+                  className="w-full flex items-center justify-between h-12 px-3 rounded-md border border-zinc-200 bg-[#f0efe9] text-sm text-zinc-900 font-medium hover:border-zinc-400 transition-colors"
+                >
+                  {listingState}
+                  <ChevronDown size={16} className="text-zinc-500 shrink-0" />
+                </button>
+                {stateDropOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-zinc-200 z-50 max-h-56 overflow-y-auto">
+                    {NIGERIA_STATES.map(s => (
+                      <button key={s} type="button"
+                        onClick={() => { setListingState(s); setListingLga(''); setStateDropOpen(false) }}
+                        className={`w-full text-left px-4 py-2.5 text-sm first:rounded-t-xl last:rounded-b-xl hover:bg-zinc-50 flex items-center justify-between ${listingState === s ? 'font-semibold text-zinc-900' : 'text-zinc-600'}`}>
+                        {s}
+                        {listingState === s && <Check size={14} className="text-zinc-900" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* LGA */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                Area / LGA {lgaRequired && <span className="text-[#D97757]">*</span>}
+              </label>
+              {lgaOptions.length > 0 ? (
+                <div ref={lgaDropRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setLgaDropOpen(v => !v)}
+                    className="w-full flex items-center justify-between h-12 px-3 rounded-md border border-zinc-200 bg-[#f0efe9] text-sm font-medium hover:border-zinc-400 transition-colors"
+                  >
+                    <span className={listingLga ? 'text-zinc-900' : 'text-zinc-400'}>
+                      {listingLga || 'Select area / LGA'}
+                    </span>
+                    <ChevronDown size={16} className="text-zinc-500 shrink-0" />
+                  </button>
+                  {lgaDropOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-zinc-200 z-50 max-h-56 overflow-y-auto">
+                      {lgaOptions.map(l => (
+                        <button key={l} type="button"
+                          onClick={() => { setListingLga(l); setLgaDropOpen(false) }}
+                          className={`w-full text-left px-4 py-2.5 text-sm first:rounded-t-xl last:rounded-b-xl hover:bg-zinc-50 flex items-center justify-between ${listingLga === l ? 'font-semibold text-zinc-900' : 'text-zinc-600'}`}>
+                          {l}
+                          {listingLga === l && <Check size={14} className="text-zinc-900" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center h-12 px-3 rounded-md border border-zinc-200 bg-[#f0efe9] focus-within:border-zinc-900 transition-colors">
+                  <input
+                    type="text"
+                    value={listingLga}
+                    onChange={e => setListingLga(e.target.value)}
+                    placeholder="e.g. Garki, Wuse, Ikeja…"
+                    className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* House address */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                House address
+              </label>
+              <div className="flex items-center gap-2 h-12 px-3 rounded-md border border-zinc-200 bg-[#f0efe9] focus-within:border-zinc-900 transition-colors">
+                <MapPin size={15} className="text-zinc-400 shrink-0" />
+                <input
+                  type="text"
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  placeholder="Street, house number (optional)"
+                  className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder:text-zinc-400"
+                />
+              </div>
+            </div>
           </div>
         </section>
 

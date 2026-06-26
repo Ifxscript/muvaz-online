@@ -4,8 +4,8 @@ import {
   mFont, mText, mSubtext, mMuted, mMutedBg, mBorder, mBorder2,
   mAccent, mAccentBg, mRadius, mRadiusSm, mRadiusLg, mShadowMd, mWhite,
 } from '../components/ui.jsx'
-import { adminApi, normalizeListing } from '../lib/api.js'
-import { CONDITION_LABEL } from '../lib/constants.js'
+import { adminApi, categoryApi, normalizeListing } from '../lib/api.js'
+import { CONDITION_LABEL, CATEGORIES } from '../lib/constants.js'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -555,9 +555,119 @@ function UsersTab() {
   )
 }
 
+// ── Categories tab ────────────────────────────────────────────────────────────
+
+function CategoriesTab() {
+  const [cats,    setCats]    = useState([])
+  const [loading, setLoading] = useState(true)
+  const [newName, setNewName] = useState('')
+  const [adding,  setAdding]  = useState(false)
+  const [toast,   setToast]   = useState(null)
+
+  const showToast = msg => { setToast(msg); setTimeout(() => setToast(null), 2200) }
+
+  useEffect(() => {
+    categoryApi.getAll()
+      .then(data => setCats(Array.isArray(data) ? data : []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const add = async () => {
+    const name = newName.trim()
+    if (!name || adding) return
+    setAdding(true)
+    try {
+      const created = await adminApi.addCategory(name)
+      setCats(prev => [...prev, created])
+      setNewName('')
+      showToast(`"${name}" added`)
+    } catch (e) { showToast(e.message) }
+    finally { setAdding(false) }
+  }
+
+  const remove = async cat => {
+    try {
+      await adminApi.deleteCategory(cat.id)
+      setCats(prev => prev.filter(c => c.id !== cat.id))
+      showToast(`"${cat.name}" removed`)
+    } catch (e) { showToast(e.message) }
+  }
+
+  // seed the default CATEGORIES list into the DB (only when DB is empty)
+  const seed = async () => {
+    setAdding(true)
+    try {
+      const results = []
+      for (const name of CATEGORIES) {
+        try { results.push(await adminApi.addCategory(name)) } catch { /* skip duplicates */ }
+      }
+      setCats(prev => {
+        const existing = new Set(prev.map(c => c.name.toLowerCase()))
+        return [...prev, ...results.filter(r => !existing.has(r.name.toLowerCase()))]
+      })
+      showToast('Default categories seeded')
+    } catch (e) { showToast(e.message) }
+    finally { setAdding(false) }
+  }
+
+  return (
+    <div style={{ padding: '20px 20px 48px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <h2 style={{ fontFamily: mFont, fontSize: 15, fontWeight: 700, color: mText, margin: 0 }}>Categories</h2>
+        <span style={{ background: mText, color: mWhite, fontFamily: mFont, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{cats.length}</span>
+        {cats.length === 0 && !loading && (
+          <button onClick={seed} disabled={adding} style={{ marginLeft: 'auto', fontFamily: mFont, fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: `1px solid ${mBorder}`, background: mWhite, color: mText, cursor: 'pointer', opacity: adding ? 0.4 : 1 }}>
+            Seed defaults
+          </button>
+        )}
+      </div>
+
+      {/* Add new */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <input
+          value={newName}
+          onChange={e => setNewName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && add()}
+          placeholder="New category name…"
+          style={{ flex: 1, height: 40, padding: '0 12px', borderRadius: 8, border: `1px solid ${mBorder}`, fontFamily: mFont, fontSize: 14, color: mText, outline: 'none', background: mWhite }}
+        />
+        <button onClick={add} disabled={!newName.trim() || adding} style={{ height: 40, padding: '0 16px', borderRadius: 8, border: 'none', background: mText, color: mWhite, fontFamily: mFont, fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: !newName.trim() || adding ? 0.4 : 1 }}>
+          Add
+        </button>
+      </div>
+
+      {loading ? (
+        <div style={{ padding: '60px 0', textAlign: 'center' }}>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: `2px solid ${mBorder}`, borderTopColor: mText, animation: 'spin 0.7s linear infinite', margin: '0 auto' }} />
+        </div>
+      ) : cats.length === 0 ? (
+        <div style={{ padding: '40px 20px', textAlign: 'center', borderRadius: mRadiusLg, border: `1.5px dashed ${mBorder}`, background: mMutedBg }}>
+          <p style={{ fontFamily: mFont, fontSize: 14, color: mMuted, margin: '0 0 12px' }}>No categories yet. Add one above or seed the defaults.</p>
+        </div>
+      ) : (
+        <div style={{ borderRadius: mRadius, border: `1px solid ${mBorder}`, overflow: 'hidden', background: mWhite }}>
+          {cats.map((cat, i) => (
+            <div key={cat.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < cats.length - 1 ? `1px solid ${mBorder}` : 'none' }}>
+              <span style={{ fontFamily: mFont, fontSize: 14, color: mText }}>{cat.name}</span>
+              <button onClick={() => remove(cat)} style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${mBorder}`, background: mWhite, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <MClose size={14} stroke={mMuted} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)', background: mText, color: mWhite, fontFamily: mFont, fontSize: 13, fontWeight: 500, padding: '10px 20px', borderRadius: 999, boxShadow: mShadowMd, zIndex: 100, whiteSpace: 'nowrap', animation: 'fadeInUp .2s ease' }}>{toast}</div>
+      )}
+    </div>
+  )
+}
+
 // ── Admin page ────────────────────────────────────────────────────────────────
 
-const TABS = ['Dashboard', 'Listings', 'Orders', 'Users']
+const TABS = ['Dashboard', 'Listings', 'Orders', 'Users', 'Categories']
 
 export default function Admin({ onNavigate }) {
   const [tab, setTab] = useState('Dashboard')
@@ -595,10 +705,11 @@ export default function Admin({ onNavigate }) {
       </div>
 
       {/* Tab content */}
-      {tab === 'Dashboard' && <DashboardTab />}
-      {tab === 'Listings'  && <ListingsTab />}
-      {tab === 'Orders'    && <OrdersTab />}
-      {tab === 'Users'     && <UsersTab />}
+      {tab === 'Dashboard'  && <DashboardTab />}
+      {tab === 'Listings'   && <ListingsTab />}
+      {tab === 'Orders'     && <OrdersTab />}
+      {tab === 'Users'      && <UsersTab />}
+      {tab === 'Categories' && <CategoriesTab />}
 
       <style>{`@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`}</style>
     </div>

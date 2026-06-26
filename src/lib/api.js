@@ -113,6 +113,12 @@ export const adminApi = {
   inspection:      id        => api.patch(`/admin/orders/${id}/inspection`),
   close:           id        => api.patch(`/admin/orders/${id}/close`),
   cancel:          id        => api.patch(`/admin/orders/${id}/cancel`),
+  addCategory:     name      => api.post('/admin/categories', { name }),
+  deleteCategory:  id        => api.delete(`/admin/categories/${id}`),
+}
+
+export const categoryApi = {
+  getAll: () => api.get('/categories'),
 }
 
 // ── Response normalizers ──────────────────────────────────────────────────────
@@ -136,7 +142,10 @@ export function normalizeListing(raw) {
     likeCount:         raw.likeCount ?? 0,
     saved:             raw.savedByCurrentUser ?? false,
     offerCount:        raw.offerCount ?? 0,
-    region:            '',
+    state:             raw.state ?? '',
+    lga:               raw.lga ?? '',
+    region:            raw.lga ?? '',
+    address:           raw.address ?? '',
   }
 }
 

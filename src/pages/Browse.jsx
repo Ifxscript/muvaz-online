@@ -7,7 +7,7 @@ import ListCard from '../components/ListCard.jsx'
 import ItemPage from './ItemPage.jsx'
 import { MyAdvertPage } from './Profile.jsx'
 import { cn } from '../lib/utils.js'
-import { listingsApi, normalizeListing } from '../lib/api.js'
+import { listingsApi, normalizeListing, categoryApi } from '../lib/api.js'
 import { CONDITION_LABEL, NIGERIA_STATES, STATE_LGAS, CATEGORIES } from '../lib/constants.js'
 
 const MAIN_CATS = ['All', 'Furniture', 'Electronics', 'Clothing & Shoes', 'Sports & Fitness', 'Kitchen']
@@ -78,6 +78,12 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
   const [filterOpen,  setFilterOpen]  = useState(false)
   const [state,        setState]        = useState(initialState)
   const [showAllCats,  setShowAllCats]  = useState(false)
+  const [apiCategories, setApiCategories] = useState([])
+  useEffect(() => {
+    categoryApi.getAll()
+      .then(data => { if (Array.isArray(data) && data.length > 0) setApiCategories(data.map(c => c.name)) })
+      .catch(() => {})
+  }, [])
   const [searchStateDropOpen, setSearchStateDropOpen] = useState(false)
   const searchStateDropRef = useRef(null)
   useEffect(() => {
@@ -249,7 +255,7 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
 
           <div className="md:hidden w-px h-8 bg-zinc-200 shrink-0 self-center" />
 
-          {(showAllCats ? ['All', ...CATEGORIES] : MAIN_CATS).map(c => (
+          {(showAllCats ? ['All', ...(apiCategories.length > 0 ? apiCategories : CATEGORIES)] : MAIN_CATS).map(c => (
             <Chip key={c} active={cat === c} onClick={() => setCat(c)}>{c}</Chip>
           ))}
           {!showAllCats ? (
