@@ -197,7 +197,7 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
             <ArrowLeft size={20} className="text-zinc-700" />
           </button>
 
-          <div className="flex-1 flex items-center gap-3 h-14 px-4 rounded-2xl bg-[#f0efe9] border border-zinc-200 focus-within:border-zinc-400 transition-colors">
+          <div className="flex-1 min-w-0 flex items-center gap-2 h-11 px-3 rounded-2xl bg-[#f0efe9] border border-zinc-200 focus-within:border-zinc-400 transition-colors">
             <Search size={18} className="text-zinc-500 shrink-0" />
             <input
               type="text"
