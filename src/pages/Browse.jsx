@@ -204,35 +204,35 @@ export default function Browse({ onBack, requireAuth, currentUser, onEdit, initi
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search items…"
-              className="flex-1 bg-transparent text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none"
+              className="flex-1 min-w-0 bg-transparent text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none"
             />
             {query && (
               <button onClick={() => setQuery('')} className="flex shrink-0">
                 <X size={14} className="text-zinc-400" />
               </button>
             )}
-            <span className="w-px h-5 bg-zinc-300 shrink-0" />
-            <div ref={searchStateDropRef} className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() => setSearchStateDropOpen(v => !v)}
-                className="flex items-center gap-1.5 text-sm font-semibold text-zinc-900 select-none"
-              >
-                {state.replace(' (FCT)', '')}
-                <ChevronDown size={14} className="text-zinc-500" />
-              </button>
-              {searchStateDropOpen && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-zinc-200 z-50 max-h-64 overflow-y-auto">
-                  {NIGERIA_STATES.map(s => (
-                    <button key={s} type="button"
-                      onClick={() => { setState(s); setRegion('All'); setSearchStateDropOpen(false) }}
-                      className={`w-full text-left px-4 py-2.5 text-sm first:rounded-t-xl last:rounded-b-xl hover:bg-zinc-50 ${state === s ? 'font-semibold text-zinc-900' : 'text-zinc-600'}`}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+          </div>
+
+          <div ref={searchStateDropRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setSearchStateDropOpen(v => !v)}
+              className="flex items-center gap-1 h-11 px-2.5 rounded-2xl bg-[#f0efe9] border border-zinc-200 text-sm font-semibold text-zinc-900 select-none whitespace-nowrap"
+            >
+              {state.replace(' (FCT)', '')}
+              <ChevronDown size={14} className="text-zinc-500 shrink-0" />
+            </button>
+            {searchStateDropOpen && (
+              <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-zinc-200 z-50 max-h-64 overflow-y-auto">
+                {NIGERIA_STATES.map(s => (
+                  <button key={s} type="button"
+                    onClick={() => { setState(s); setRegion('All'); setSearchStateDropOpen(false) }}
+                    className={`w-full text-left px-4 py-2.5 text-sm first:rounded-t-xl last:rounded-b-xl hover:bg-zinc-50 ${state === s ? 'font-semibold text-zinc-900' : 'text-zinc-600'}`}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <button
