@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { CONDITION_LABEL } from '../lib/constants.js'
 import { listingsApi, normalizeListing, offersApi, ordersApi } from '../lib/api.js'
-import { ArrowLeft, MapPin, Star, Check, X } from 'lucide-react'
+import { ArrowLeft, MapPin, Check, X } from 'lucide-react'
 import { Button } from '../components/ui/button.jsx'
 import { Badge } from '../components/ui/badge.jsx'
 import { Separator } from '../components/ui/separator.jsx'
@@ -139,27 +139,10 @@ export default function ItemPage({ item: initialItem, allItems, onBack, onSelect
                 </span>
               </span>
             )}
-            <span className="flex items-center gap-1">
-              <Star size={13} fill="#18181b" stroke="none" />
-              <span className="text-sm font-semibold text-zinc-900">{item.rating}</span>
-              <span className="text-sm text-zinc-400">({item.reviews})</span>
-            </span>
           </div>
 
           {/* Description */}
           <p className="text-sm text-zinc-500 leading-relaxed mb-5">{item.description}</p>
-
-          {/* Tag pills */}
-          <div className="flex gap-2 flex-wrap mb-6">
-            {[item.cat, CONDITION_LABEL[item.condition] ?? item.condition, item.lga, item.state].filter(Boolean).map(tag => (
-              <span
-                key={tag}
-                className="text-xs font-medium text-zinc-500 bg-zinc-100 rounded-full px-3 py-1"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
 
           {/* ── CTA — inline offer / buy ── */}
           <div>
