@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { MapPin } from 'lucide-react'
 import Avatar from 'boring-avatars'
 import { Separator } from '../components/ui/separator.jsx'
 import ListCard from '../components/ListCard.jsx'
@@ -158,23 +159,22 @@ export function MyAdvertPage({ advert: initial, onBack, onDelete, onEdit }) {
           {advert.title}
         </h1>
 
-        {/* Price + views */}
+        {/* Price + location + views */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-5">
           <span style={{ fontFamily: mFont, fontSize: 30, fontWeight: 900, color: mText, letterSpacing: '-1px' }}>₦{advert.price}</span>
-          <span style={{ fontFamily: mFont, fontSize: 13, color: mMuted }}>{advert.views} views</span>
+          {(advert.lga || advert.state) && (
+            <span style={{ fontFamily: mFont, fontSize: 13, color: mMuted, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <MapPin size={13} />
+              {advert.lga && advert.state ? `${advert.lga}, ${advert.state}` : advert.state || advert.lga}
+            </span>
+          )}
+          {advert.views != null && (
+            <span style={{ fontFamily: mFont, fontSize: 13, color: mMuted }}>{advert.views} views</span>
+          )}
         </div>
 
         {/* Description */}
         <p style={{ fontFamily: mFont, fontSize: 14, color: mSubtext, lineHeight: 1.65, margin: '0 0 20px' }}>{advert.description}</p>
-
-        {/* Tag pills */}
-        <div className="flex gap-2 flex-wrap mb-6">
-          {[advert.cat, CONDITION_LABEL[advert.condition] ?? advert.condition].map(tag => (
-            <span key={tag} style={{ fontFamily: mFont, fontSize: 12, fontWeight: 500, color: mMuted, background: '#f4f4f5', borderRadius: 999, padding: '4px 12px' }}>
-              {tag}
-            </span>
-          ))}
-        </div>
 
         {/* Actions */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
